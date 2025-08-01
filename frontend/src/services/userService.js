@@ -2,22 +2,203 @@ import apiClient from './apiClient';
 
 export const userService = {
   getUsers: async () => {
-    const response = await apiClient.get('/users');
-    return response.data;
+    try {
+      console.log('UserService: Fetching active users...');
+      // Use the /active endpoint which returns List<User> instead of Page<User>
+      const response = await apiClient.get('/api/users/active');
+      console.log('UserService: Raw response:', response.data);
+      console.log('UserService: Response type:', typeof response.data);
+      console.log('UserService: Is array?', Array.isArray(response.data));
+      
+      // This endpoint should return a direct array
+      if (Array.isArray(response.data)) {
+        console.log('UserService: Found direct array response with', response.data.length, 'users');
+        return response.data;
+      }
+      
+      console.warn('UserService: Unexpected response structure, returning empty array');
+      return [];
+    } catch (error) {
+      console.error('UserService: Error fetching users:', error);
+      throw error;
+    }
+  },
+
+  getAllUsers: async (params = {}) => {
+    try {
+      console.log('UserService: Fetching all users with params:', params);
+      const response = await apiClient.get('/api/users', { params });
+      console.log('UserService: All users response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error fetching all users:', error);
+      throw error;
+    }
   },
 
   createUser: async (userData) => {
-    const response = await apiClient.post('/users', userData);
-    return response.data;
+    try {
+      console.log('UserService: Creating user:', userData);
+      const response = await apiClient.post('/api/users', userData);
+      console.log('UserService: User created:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error creating user:', error);
+      throw error;
+    }
   },
 
   updateUser: async (id, userData) => {
-    const response = await apiClient.put(`/users/${id}`, userData);
-    return response.data;
+    try {
+      console.log('UserService: Updating user:', id, userData);
+      const response = await apiClient.put(`/api/users/${id}`, userData);
+      console.log('UserService: User updated:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error updating user:', error);
+      throw error;
+    }
   },
 
   deleteUser: async (id) => {
-    const response = await apiClient.delete(`/users/${id}`);
-    return response.data;
+    try {
+      console.log('UserService: Deleting user:', id);
+      const response = await apiClient.delete(`/api/users/${id}`);
+      console.log('UserService: User deleted');
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error deleting user:', error);
+      throw error;
+    }
+  },
+
+  updateProfile: async (profileData, userId) => {
+    try {
+      console.log('UserService: Updating profile with data:', profileData, 'for user ID:', userId);
+      const requestData = {
+        userId: userId,
+        ...profileData
+      };
+      const response = await apiClient.put('/api/users/profile', requestData);
+      console.log('UserService: Profile update response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error updating profile:', error);
+      throw error;
+    }
+  },
+
+  getTechnicians: async () => {
+    try {
+      console.log('UserService: Fetching technicians...');
+      const response = await apiClient.get('/api/users/technicians');
+      console.log('UserService: Technicians response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error fetching technicians:', error);
+      throw error;
+    }
+  },
+
+  getUserById: async (id) => {
+    try {
+      const response = await apiClient.get(`/api/users/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error fetching user by ID:', error);
+      throw error;
+    }
+  },
+
+  activateUser: async (id) => {
+    try {
+      const response = await apiClient.put(`/api/users/${id}/activate`);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error activating user:', error);
+      throw error;
+    }
+  },
+
+  deactivateUser: async (id) => {
+    try {
+      const response = await apiClient.put(`/api/users/${id}/deactivate`);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error deactivating user:', error);
+      throw error;
+    }
+  },
+
+  changeUserRole: async (id, role) => {
+    try {
+      const response = await apiClient.put(`/api/users/${id}/role`, { role });
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error changing user role:', error);
+      throw error;
+    }
+  },
+
+  getUsersByRole: async (role) => {
+    try {
+      const response = await apiClient.get(`/api/users/role/${role}`);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error fetching users by role:', error);
+      throw error;
+    }
+  },
+
+  getUsersByDepartment: async (department) => {
+    try {
+      const response = await apiClient.get(`/api/users/department/${encodeURIComponent(department)}`);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error fetching users by department:', error);
+      throw error;
+    }
+  },
+
+  searchUsers: async (searchTerm) => {
+    try {
+      const response = await apiClient.get(`/api/users/search`, {
+        params: { name: searchTerm }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error searching users:', error);
+      throw error;
+    }
+  },
+
+  getUserStatistics: async () => {
+    try {
+      const response = await apiClient.get('/api/users/statistics');
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error fetching user statistics:', error);
+      throw error;
+    }
+  },
+
+  checkUsernameExists: async (username) => {
+    try {
+      const response = await apiClient.get(`/api/users/exists/ldap/${username}`);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error checking username:', error);
+      throw error;
+    }
+  },
+
+  checkEmailExists: async (email) => {
+    try {
+      const response = await apiClient.get(`/api/users/exists/email/${encodeURIComponent(email)}`);
+      return response.data;
+    } catch (error) {
+      console.error('UserService: Error checking email:', error);
+      throw error;
+    }
   },
 }; 

@@ -238,9 +238,9 @@ public class UserService {
         long activeUsers = userRepository.countByIsActiveTrue();
         long adminUsers = userRepository.countByRole(UserRole.ADMIN);
         long technicianUsers = userRepository.countByRole(UserRole.TECHNICIAN);
-        long regularUsers = userRepository.countByRole(UserRole.USER);
+        long employeeUsers = userRepository.countByRole(UserRole.EMPLOYEE);
         
-        return new UserStatistics(totalUsers, activeUsers, adminUsers, technicianUsers, regularUsers);
+        return new UserStatistics(totalUsers, activeUsers, adminUsers, technicianUsers, employeeUsers);
     }
     
     /**
@@ -277,7 +277,7 @@ public class UserService {
             // Create new user
             User newUser = new User(ldapUsername, email, fullName);
             newUser.setDepartment(department);
-            newUser.setRole(UserRole.USER); // Default role
+            newUser.setRole(UserRole.EMPLOYEE); // Default role
             return userRepository.save(newUser);
         }
     }
@@ -314,15 +314,15 @@ public class UserService {
         private final long activeUsers;
         private final long adminUsers;
         private final long technicianUsers;
-        private final long regularUsers;
+        private final long employeeUsers;
         
         public UserStatistics(long totalUsers, long activeUsers, long adminUsers, 
-                            long technicianUsers, long regularUsers) {
+                            long technicianUsers, long employeeUsers) {
             this.totalUsers = totalUsers;
             this.activeUsers = activeUsers;
             this.adminUsers = adminUsers;
             this.technicianUsers = technicianUsers;
-            this.regularUsers = regularUsers;
+            this.employeeUsers = employeeUsers;
         }
         
         // Getters
@@ -330,6 +330,6 @@ public class UserService {
         public long getActiveUsers() { return activeUsers; }
         public long getAdminUsers() { return adminUsers; }
         public long getTechnicianUsers() { return technicianUsers; }
-        public long getRegularUsers() { return regularUsers; }
+        public long getEmployeeUsers() { return employeeUsers; }
     }
 }

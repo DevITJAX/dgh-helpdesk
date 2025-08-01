@@ -3,12 +3,13 @@ import apiClient from './apiClient';
 export const authService = {
   login: async (username, password) => {
     try {
-      const response = await apiClient.post('/auth/login', {
+      const response = await apiClient.post('/api/auth/login', {
         username,
         password,
       });
-      // Assuming backend returns { token, user }
-      return response.data;
+      // The backend now returns a more complex object, let's destructure it
+      const { token, ...user } = response.data;
+      return { token, user };
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Login failed');
     }
@@ -16,7 +17,7 @@ export const authService = {
 
   logout: async () => {
     try {
-      await apiClient.post('/auth/logout');
+      await apiClient.post('/api/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -27,7 +28,7 @@ export const authService = {
 
   checkAuth: async () => {
     try {
-      const response = await apiClient.get('/auth/check');
+      const response = await apiClient.get('/api/auth/check');
       return response.data;
     } catch (error) {
       throw new Error('Authentication check failed');
@@ -36,10 +37,23 @@ export const authService = {
 
   getUserInfo: async () => {
     try {
-      const response = await apiClient.get('/auth/user');
+      const response = await apiClient.get('/api/auth/me');
       return response.data;
     } catch (error) {
       throw new Error('Failed to get user info');
+    }
+  },
+
+  verifyToken: async (token) => {
+    try {
+      const response = await apiClient.get('/api/auth/verify', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error('Token verification failed');
     }
   }
 };

@@ -64,7 +64,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 authorities.add(new SimpleGrantedAuthority("ROLE_TECHNICIAN"));
                 authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
                 break;
-            case USER:
+            case EMPLOYEE:
             default:
                 authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
                 break;

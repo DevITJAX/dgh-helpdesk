@@ -16,6 +16,8 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import ma.gov.dgh.helpdesk.dto.UserAdminDto;
 
 /**
@@ -23,7 +25,7 @@ import ma.gov.dgh.helpdesk.dto.UserAdminDto;
  */
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:4200"})
 public class UserController {
     
     private final UserService userService;
@@ -199,6 +201,40 @@ public class UserController {
     }
     
     /**
+     * Update current user's profile
+     */
+    @PutMapping("/profile")
+    public ResponseEntity<User> updateProfile(@Valid @RequestBody ProfileUpdateRequest request) {
+        try {
+            // For development, we'll use the userId from the request
+            // In production, this should use session authentication
+            if (request.getUserId() == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            Optional<User> currentUserOpt = userService.findById(request.getUserId());
+            
+            if (currentUserOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            User currentUser = currentUserOpt.get();
+            
+            // Update allowed profile fields
+            currentUser.setFullName(request.getFullName());
+            currentUser.setEmail(request.getEmail());
+            currentUser.setPhoneNumber(request.getPhoneNumber());
+            currentUser.setOfficeLocation(request.getOfficeLocation());
+            currentUser.setDepartment(request.getDepartment());
+            
+            User updatedUser = userService.updateUser(currentUser);
+            return ResponseEntity.ok(updatedUser);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
      * Update user's last login
      */
     @PutMapping("/ldap/{ldapUsername}/login")
@@ -325,6 +361,64 @@ public class UserController {
         
         public void setFullName(String fullName) {
             this.fullName = fullName;
+        }
+        
+        public String getDepartment() {
+            return department;
+        }
+        
+        public void setDepartment(String department) {
+            this.department = department;
+        }
+    }
+    
+    public static class ProfileUpdateRequest {
+        private Long userId;
+        private String fullName;
+        private String email;
+        private String phoneNumber;
+        private String officeLocation;
+        private String department;
+        
+        // Getters and setters
+        public Long getUserId() {
+            return userId;
+        }
+        
+        public void setUserId(Long userId) {
+            this.userId = userId;
+        }
+        
+        public String getFullName() {
+            return fullName;
+        }
+        
+        public void setFullName(String fullName) {
+            this.fullName = fullName;
+        }
+        
+        public String getEmail() {
+            return email;
+        }
+        
+        public void setEmail(String email) {
+            this.email = email;
+        }
+        
+        public String getPhoneNumber() {
+            return phoneNumber;
+        }
+        
+        public void setPhoneNumber(String phoneNumber) {
+            this.phoneNumber = phoneNumber;
+        }
+        
+        public String getOfficeLocation() {
+            return officeLocation;
+        }
+        
+        public void setOfficeLocation(String officeLocation) {
+            this.officeLocation = officeLocation;
         }
         
         public String getDepartment() {

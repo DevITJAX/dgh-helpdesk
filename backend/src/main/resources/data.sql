@@ -7,8 +7,8 @@ VALUES
 ('admin', 'admin@dgh.gov.ma', 'System Administrator', 'IT Department', 'ADMIN', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('john.doe', 'john.doe@dgh.gov.ma', 'John Doe', 'IT Department', 'TECHNICIAN', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('jane.smith', 'jane.smith@dgh.gov.ma', 'Jane Smith', 'IT Department', 'TECHNICIAN', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('alice.finance', 'alice.johnson@dgh.gov.ma', 'Alice Johnson', 'Finance Department', 'USER', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('bob.hr', 'bob.williams@dgh.gov.ma', 'Bob Williams', 'HR Department', 'USER', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('alice.finance', 'alice.johnson@dgh.gov.ma', 'Alice Johnson', 'Finance Department', 'EMPLOYEE', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('bob.hr', 'bob.williams@dgh.gov.ma', 'Bob Williams', 'HR Department', 'EMPLOYEE', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert sample equipment
 INSERT INTO equipment (hostname, ip_address, mac_address, equipment_type, manufacturer, model, os_name, location, status, is_managed, created_at, updated_at, last_seen)

@@ -33,6 +33,7 @@ C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\rep
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\CustomLdapAuthenticationProvider.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\CustomUserDetails.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\CustomUserDetailsService.java
+C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\JwtTokenProvider.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\JwtUtil.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\service\DatabaseService.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\service\EquipmentService.java

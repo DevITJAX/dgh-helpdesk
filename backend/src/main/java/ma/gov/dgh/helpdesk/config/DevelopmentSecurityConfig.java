@@ -34,6 +34,12 @@ public class DevelopmentSecurityConfig {
                 .requestMatchers("/api/health/**").permitAll()
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/logout").permitAll()
+                .requestMatchers("/api/auth/check").permitAll()
+                .requestMatchers("/api/auth/me").permitAll()
+                .requestMatchers("/api/test/**").permitAll()  // Allow test endpoints
+                .requestMatchers("/api/dashboard/**").permitAll()  // Temporarily allow dashboard endpoints for testing
+                .requestMatchers("/api/users/**").permitAll()  // Temporarily allow user endpoints for testing
+                .requestMatchers("/api/users/profile").permitAll()  // Temporarily allow profile updates for testing
                 .requestMatchers("/api/tickets/samples/create").permitAll()  // Allow ticket creation for testing
                 .requestMatchers("/api/tickets/**").permitAll()  // Temporarily allow all ticket endpoints for testing
                 .requestMatchers("/api/**").authenticated()

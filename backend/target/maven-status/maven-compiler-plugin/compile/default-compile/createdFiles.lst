@@ -8,7 +8,6 @@ ma\gov\dgh\helpdesk\controller\HealthController$HealthStatus.class
 ma\gov\dgh\helpdesk\config\DevelopmentSecurityConfig.class
 ma\gov\dgh\helpdesk\exception\BusinessException$DuplicateEquipmentException.class
 ma\gov\dgh\helpdesk\controller\AuthController$LogoutResponse.class
-ma\gov\dgh\helpdesk\security\CustomLdapAuthenticationProvider.class
 ma\gov\dgh\helpdesk\entity\Equipment.class
 ma\gov\dgh\helpdesk\exception\BusinessException$UnauthorizedOperationException.class
 ma\gov\dgh\helpdesk\controller\TicketController$TicketCreateRequest.class
@@ -49,7 +48,6 @@ ma\gov\dgh\helpdesk\exception\BusinessException.class
 ma\gov\dgh\helpdesk\controller\UserController$LdapSyncRequest.class
 ma\gov\dgh\helpdesk\dgh_helpdesk\DghHelpdeskApplication.class
 ma\gov\dgh\helpdesk\controller\TicketController$EscalateTicketRequest.class
-ma\gov\dgh\helpdesk\security\CustomUserDetailsService.class
 ma\gov\dgh\helpdesk\controller\TestController.class
 ma\gov\dgh\helpdesk\entity\User.class
 ma\gov\dgh\helpdesk\exception\GlobalExceptionHandler.class

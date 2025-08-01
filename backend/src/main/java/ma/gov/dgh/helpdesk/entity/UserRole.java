@@ -5,9 +5,9 @@ package ma.gov.dgh.helpdesk.entity;
  */
 public enum UserRole {
     /**
-     * Regular user - can create tickets and view their own tickets
+     * Regular employee - can create tickets and view their own tickets
      */
-    USER("User"),
+    EMPLOYEE("Employee"),
     
     /**
      * Technician - can be assigned tickets and resolve them

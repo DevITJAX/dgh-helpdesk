@@ -1,11 +1,16 @@
 import apiClient from './apiClient';
 
 export const ticketService = {
+  // Get all tickets (alias for getAllTickets)
+  getTickets: async (params = {}) => {
+    return ticketService.getAllTickets(params);
+  },
+
   // Get all tickets with pagination and filtering
   getAllTickets: async (params = {}) => {
     try {
       console.log('ticketService: Making API call to /api/tickets');
-      const response = await apiClient.get('/tickets', { params });
+      const response = await apiClient.get('/api/tickets', { params });
       console.log('ticketService: Raw axios response:', response);
       console.log('ticketService: Response status:', response.status);
       console.log('ticketService: Response headers:', response.headers);
@@ -36,7 +41,7 @@ export const ticketService = {
   // Get ticket by ID
   getTicketById: async (id) => {
     try {
-      const response = await apiClient.get(`/tickets/${id}`);
+      const response = await apiClient.get(`/api/tickets/${id}`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch ticket');
@@ -46,7 +51,7 @@ export const ticketService = {
   // Create new ticket
   createTicket: async (ticketData) => {
     try {
-      const response = await apiClient.post('/tickets', ticketData);
+      const response = await apiClient.post('/api/tickets', ticketData);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to create ticket');
@@ -56,7 +61,7 @@ export const ticketService = {
   // Update ticket
   updateTicket: async (id, ticketData) => {
     try {
-      const response = await apiClient.put(`/tickets/${id}`, ticketData);
+      const response = await apiClient.put(`/api/tickets/${id}`, ticketData);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to update ticket');
@@ -66,7 +71,7 @@ export const ticketService = {
   // Assign ticket to user
   assignTicket: async (id, assignedToId) => {
     try {
-      const response = await apiClient.put(`/tickets/${id}/assign`, { assignedToId });
+      const response = await apiClient.put(`/api/tickets/${id}/assign`, { assignedToId });
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to assign ticket');
@@ -76,7 +81,7 @@ export const ticketService = {
   // Change ticket status
   changeTicketStatus: async (id, status, comment = '') => {
     try {
-      const response = await apiClient.put(`/tickets/${id}/status`, { status, comment });
+      const response = await apiClient.put(`/api/tickets/${id}/status`, { status, comment });
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to change ticket status');
@@ -86,7 +91,7 @@ export const ticketService = {
   // Escalate ticket
   escalateTicket: async (id, reason) => {
     try {
-      const response = await apiClient.put(`/tickets/${id}/escalate`, { reason });
+      const response = await apiClient.put(`/api/tickets/${id}/escalate`, { reason });
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to escalate ticket');
@@ -96,7 +101,7 @@ export const ticketService = {
   // Add comment to ticket
   addComment: async (id, commentData) => {
     try {
-      const response = await apiClient.post(`/tickets/${id}/comments`, commentData);
+      const response = await apiClient.post(`/api/tickets/${id}/comments`, commentData);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to add comment');
@@ -106,7 +111,7 @@ export const ticketService = {
   // Get ticket comments
   getTicketComments: async (id) => {
     try {
-      const response = await apiClient.get(`/tickets/${id}/comments`);
+      const response = await apiClient.get(`/api/tickets/${id}/comments`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch comments');
@@ -116,7 +121,7 @@ export const ticketService = {
   // Delete ticket
   deleteTicket: async (id) => {
     try {
-      const response = await apiClient.delete(`/tickets/${id}`);
+      const response = await apiClient.delete(`/api/tickets/${id}`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to delete ticket');
@@ -126,7 +131,7 @@ export const ticketService = {
   // Get tickets by status
   getTicketsByStatus: async (status) => {
     try {
-      const response = await apiClient.get(`/tickets/status/${status}`);
+      const response = await apiClient.get(`/api/tickets/status/${status}`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch tickets by status');
@@ -136,7 +141,7 @@ export const ticketService = {
   // Get tickets by priority
   getTicketsByPriority: async (priority) => {
     try {
-      const response = await apiClient.get(`/tickets/priority/${priority}`);
+      const response = await apiClient.get(`/api/tickets/priority/${priority}`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch tickets by priority');
@@ -146,7 +151,7 @@ export const ticketService = {
   // Get unassigned tickets
   getUnassignedTickets: async () => {
     try {
-      const response = await apiClient.get('/tickets/unassigned');
+      const response = await apiClient.get('/api/tickets/unassigned');
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch unassigned tickets');
@@ -156,7 +161,7 @@ export const ticketService = {
   // Get ticket statistics
   getTicketStatistics: async () => {
     try {
-      const response = await apiClient.get('/tickets/statistics');
+      const response = await apiClient.get('/api/tickets/statistics');
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch ticket statistics');

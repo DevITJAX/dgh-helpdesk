@@ -1,4 +1,4 @@
-# Cursor Rule: DGH HelpDesk Project Structure & Conventions
+# Cu- **Frontend**: React 18, JavaScript (not TypeScript), Material-UI v5 (sx prop only), React Context/useReducer, Axios, React Router v6, Create React App. Strict folder structure: components, features, hooks, services, contexts, utils, constants. UI/UX: MUI only, no custom CSS/Tailwind, government branding, Arabic/French support, responsive, accessibility.sor Rule: DGH HelpDesk Project Structure & Conventions
 
 - **Full-stack IT helpdesk system for the Moroccan Ministry of Equipment and Water**
 - **Backend:** Java 17, Spring Boot 3.5.3, organized by domain (controller, service, repository, entity, dto, exception, security, validation). RESTful API, all endpoints under `/api/`. Features: LDAP/JWT auth (in-memory), role-based access (ADMIN, TECHNICIAN, USER), ticket/user/equipment management, dashboard, network discovery. Security: JWT in memory, HTTPS in prod, input validation, route guards.
@@ -20,19 +20,19 @@
 
 ### **Technology Stack**
 - **Backend**: Java 17 + Spring Boot 3.5.3
-- **Frontend**: Angular 18 + TypeScript 5.5
+- **Frontend**: React 18 + JavaScript (ES6+)
 - **Database**: H2 (development) / PostgreSQL (production)
 - **Authentication**: LDAP/Active Directory integration
-- **UI**: Angular Material + PrimeNG (Pure Material Design)
+- **UI**: Material-UI v5 + React Router v6
 - **Network Discovery**: SNMP4J, NMAP integration
 
 ### **Key Statistics**
 - **Backend**: 90+ Java files
-- **Frontend**: 74+ TypeScript files
+- **Frontend**: 15+ React components
 - **Entities**: 11 JPA entities with relationships
 - **Controllers**: 8 REST controllers
 - **Services**: 6 business logic services
-- **Angular Modules**: 6 feature modules
+- **React Modules**: 5 feature modules
 
 ---
 
@@ -40,13 +40,13 @@
 
 ```
 ┌─────────────────────┐    ┌─────────────────────┐    ┌─────────────────────┐
-│   Angular Frontend  │    │  Spring Boot API    │    │    H2 Database      │
-│   (Port 4200)       │◄──►│   (Port 8080)       │◄──►│  + LDAP Server      │
+│   React Frontend    │    │  Spring Boot API    │    │    H2 Database      │
+│   (Port 3000)       │◄──►│   (Port 8080)       │◄──►│  + LDAP Server      │
 └─────────────────────┘    └─────────────────────┘    └─────────────────────┘
          │                           │                           │
     ┌─────────┐              ┌─────────────┐            ┌─────────────┐
     │Material │              │Spring       │            │Network      │
-    │PrimeNG  │              │Security     │            │Discovery    │
+    │UI v5    │              │Security     │            │Discovery    │
     │         │              │JPA/Hibernate│            │SNMP/NMAP    │
     └─────────┘              └─────────────┘            └─────────────┘
 ```
@@ -108,43 +108,33 @@
 - ✅ Structured logging
 - ✅ Database cleanup operations
 
-### ✅ **Frontend - CORE COMPLETE (60%)**
+### ✅ **Frontend - CORE COMPLETE (70%)**
 
 #### **Project Structure & Configuration**
-- ✅ Angular 18 with TypeScript
-- ✅ Feature-based module architecture
-- ✅ Lazy loading routes
-- ✅ Angular Material + PrimeNG setup
-- ✅ Tailwind CSS removed - Pure Material Design
+- ✅ React 18 with Create React App
+- ✅ Feature-based folder architecture
+- ✅ React Router v6 setup
+- ✅ Material-UI v5 setup
+- ✅ Axios HTTP client configuration
 
 #### **Authentication & Security**
-- ✅ `AuthService` with token management
-- ✅ `AuthGuard` for route protection
-- ✅ Login component with LDAP form
-- ✅ Role-based access control
+- ✅ `AuthContext` with localStorage persistence
+- ✅ `ProtectedRoute` component for route protection
+- ✅ Login component with Material-UI form
+- ✅ JWT token management
+- ✅ Automatic logout on 401 errors
 
-#### **Core Modules & Components**
-- ✅ `AppModule` - Main application
-- ✅ `LayoutModule` - Shared layouts
-- ✅ `LoginModule` - Authentication
-- ✅ `DashboardModule` - Statistics overview
-- ✅ `UsersModule` - User management
-- ✅ `TicketsModule` - Ticket management
+#### **Core Components**
+- ✅ `App.js` - Main application with routing
+- ✅ `Login.js` - Authentication component
+- ✅ `Dashboard.js` - Main dashboard
+- ✅ `ProtectedRoute.js` - Route guard component
 
-#### **UI Components**
-- ✅ Main layout with responsive navigation
-- ✅ Dashboard with admin statistics
-- ✅ User list with data tables
-- ✅ User dialog forms (create/edit)
-- ✅ Ticket list component
-- ✅ Delete confirmation dialogs
-
-#### **Services & Models**
-- ✅ TypeScript interfaces for all data models
-- ✅ HTTP services with error handling
-- ✅ `UserService` for user operations
-- ✅ `TicketService` for ticket operations
-- ✅ `DashboardService` for statistics
+#### **Services & API Integration**
+- ✅ `apiClient.js` - Axios instance with interceptors
+- ✅ JWT token management
+- ✅ Error handling and authentication
+- ✅ Backend communication setup
 
 ---
 
@@ -222,63 +212,23 @@ backend/
 ```
 frontend/
 ├── package.json                        # npm dependencies
-├── angular.json                        # Angular CLI config
-├── tsconfig.json                       # TypeScript config
-├── src/
-│   ├── main.ts                         # Bootstrap
+├── public/
 │   ├── index.html                      # Main HTML
-│   ├── styles.css                      # Global styles
-│   ├── environments/                   # Environment configs
-│   │   ├── environment.ts
-│   │   └── environment.prod.ts
-│   ├── assets/images/                  # DGH logos
-│   │   ├── dgh_logo.png
-│   │   ├── dgh-logo.svg
-│   │   └── dgh-logo-small.svg
-│   └── app/
-│       ├── app.component.ts            # Root component
-│       ├── app.module.ts               # Main module
-│       ├── app-routing.module.ts       # Routes
-│       ├── app.routes.ts               # Route definitions
-│       ├── core/                       # Core services
-│       │   ├── guards/
-│       │   │   └── auth.guard.ts       # Route protection
-│       │   ├── models/                 # TypeScript interfaces
-│       │   │   ├── ticket.model.ts     # Ticket interfaces
-│       │   │   └── user.model.ts       # User interfaces
-│       │   └── services/               # HTTP services
-│       │       ├── auth.service.ts     # Authentication
-│       │       ├── ticket.service.ts   # Ticket operations
-│       │       └── user.service.ts     # User operations
-│       ├── features/                   # Feature modules
-│       │   ├── dashboard/              # Dashboard module
-│       │   │   ├── admin-dashboard.component.ts
-│       │   │   ├── dashboard-layout.component.ts
-│       │   │   ├── dashboard.component.ts
-│       │   │   ├── dashboard.module.ts
-│       │   │   └── dashboard.service.ts
-│       │   ├── equipment/
-│       │   │   └── equipment.routes.ts # Routes only
-│       │   ├── login/                  # Authentication module
-│       │   │   ├── login.component.ts
-│       │   │   └── login.module.ts
-│       │   ├── tickets/                # Ticket management
-│       │   │   ├── delete-ticket-dialog/
-│       │   │   ├── ticket-list/
-│       │   │   │   └── ticket-list.component.ts
-│       │   │   ├── tickets.module.ts
-│       │   │   └── tickets.routes.ts
-│       │   └── users/                  # User management
-│       │       ├── delete-user-dialog/
-│       │       ├── user-dialog/
-│       │       ├── user-list/
-│       │       │   └── user-list.component.ts
-│       │       └── users.module.ts
-│       └── layout/                     # Shared layouts
-│           ├── index.ts
-│           ├── layout.module.ts
-│           └── main-layout/
-│               └── main-layout.component.ts
+│   └── favicon.ico                     # App icon
+├── src/
+│   ├── App.js                          # Main application component
+│   ├── index.js                        # React entry point
+│   ├── App.css                         # Global styles
+│   ├── components/                     # Reusable components
+│   │   ├── Login.js                    # Authentication component
+│   │   └── ProtectedRoute.js           # Route guard
+│   ├── contexts/                       # React contexts
+│   │   └── AuthContext.js              # Authentication context
+│   ├── features/                       # Feature modules
+│   │   └── dashboard/
+│   │       └── Dashboard.js            # Main dashboard
+│   └── services/                       # API services
+│       └── apiClient.js                # Axios HTTP client
 ```
 
 ---
@@ -380,7 +330,7 @@ npm install
 npm start
 
 # Access Points
-# Frontend: http://localhost:4200
+# Frontend: http://localhost:3000
 # Backend API: http://localhost:8080
 # H2 Console: http://localhost:8080/h2-console
 ```

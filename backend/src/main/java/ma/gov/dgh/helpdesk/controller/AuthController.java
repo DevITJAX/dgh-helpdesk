@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import ma.gov.dgh.helpdesk.entity.User;
 import ma.gov.dgh.helpdesk.entity.UserRole;
+import ma.gov.dgh.helpdesk.security.JwtTokenProvider;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.List;
@@ -28,10 +29,12 @@ import java.util.List;
 public class AuthController {
     
     private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider tokenProvider;
     
     @Autowired
-    public AuthController(AuthenticationManager authenticationManager) {
+    public AuthController(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider) {
         this.authenticationManager = authenticationManager;
+        this.tokenProvider = tokenProvider;
     }
     
     /**
@@ -49,6 +52,17 @@ public class AuthController {
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
             request.getSession(true); // Ensure session is created
+
+            String token;
+            try {
+                token = tokenProvider.generateToken(authentication);
+                System.out.println("JWT token generated successfully");
+            } catch (Exception tokenEx) {
+                System.err.println("Failed to generate JWT token: " + tokenEx.getMessage());
+                tokenEx.printStackTrace();
+                // Fallback to simple token
+                token = "simple-session-token-" + System.currentTimeMillis();
+            }
 
             Object principal = authentication.getPrincipal();
             CustomUserDetails userDetails;
@@ -76,6 +90,7 @@ public class AuthController {
                 userDetails.getUser().getEmail(),
                 userDetails.getUser().getDepartment(),
                 userDetails.getUser().getRole().name(),
+                token,
                 "Login successful"
             );
             System.out.println("Login successful for user: " + userDetails.getUsername());
@@ -84,12 +99,12 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             System.out.println("Invalid credentials for user: " + loginRequest.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new LoginResponse(null, null, null, null, null, null, "Invalid credentials"));
+                .body(new LoginResponse(null, null, null, null, null, null, null, "Invalid credentials"));
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Authentication failed for user: " + loginRequest.getUsername());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new LoginResponse(null, null, null, null, null, null, "Authentication failed"));
+                .body(new LoginResponse(null, null, null, null, null, null, null, "Authentication failed"));
         }
     }
     
@@ -177,16 +192,18 @@ public class AuthController {
         private String email;
         private String department;
         private String role;
+        private String token;
         private String message;
         
         public LoginResponse(Long userId, String username, String fullName, String email, 
-                           String department, String role, String message) {
+                           String department, String role, String token, String message) {
             this.userId = userId;
             this.username = username;
             this.fullName = fullName;
             this.email = email;
             this.department = department;
             this.role = role;
+            this.token = token;
             this.message = message;
         }
         
@@ -197,6 +214,7 @@ public class AuthController {
         public String getEmail() { return email; }
         public String getDepartment() { return department; }
         public String getRole() { return role; }
+        public String getToken() { return token; }
         public String getMessage() { return message; }
     }
     

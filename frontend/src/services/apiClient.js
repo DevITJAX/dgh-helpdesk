@@ -8,11 +8,13 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor for session-based authentication
+// Request interceptor for JWT token
 apiClient.interceptors.request.use(
   (config) => {
-    // For session-based auth, we rely on cookies.
-    // The browser will handle sending the session cookie automatically.
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
     config.withCredentials = true; 
     return config;
   },
@@ -33,10 +35,12 @@ apiClient.interceptors.response.use(
       
       // Handle authentication errors
       if (status === 401) {
-        // Clear auth state and redirect to login
-        window.__DGH_AUTH_SESSION__ = null;
+        // Clear auth state
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('dgh_user');
+        delete window.__DGH_JWT__;
         
-        // Only redirect if not already on login page
+        // Redirect to login if not already there
         if (!window.location.pathname.includes('/login')) {
           window.location.href = '/login';
         }
