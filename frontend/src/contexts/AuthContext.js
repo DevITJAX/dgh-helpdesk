@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { authService } from '../services/authService';
 
 // Initial state
@@ -77,6 +78,7 @@ const AuthContext = createContext();
 // Auth provider component
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const location = useLocation();
 
   // Check for existing token on app load
   useEffect(() => {
@@ -121,7 +123,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkAuthStatus();
-  }, []);
+  }, [location]);
 
   // Login function
   const login = async (username, password) => {
