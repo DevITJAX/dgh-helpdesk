@@ -29,12 +29,10 @@ import java.util.List;
 public class AuthController {
     
     private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider tokenProvider;
     
     @Autowired
-    public AuthController(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider) {
+    public AuthController(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
-        this.tokenProvider = tokenProvider;
     }
     
     /**
@@ -53,47 +51,49 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             request.getSession(true); // Ensure session is created
 
-            String token;
-            try {
-                token = tokenProvider.generateToken(authentication);
-                System.out.println("JWT token generated successfully");
-            } catch (Exception tokenEx) {
-                System.err.println("Failed to generate JWT token: " + tokenEx.getMessage());
-                tokenEx.printStackTrace();
-                // Fallback to simple token
-                token = "simple-session-token-" + System.currentTimeMillis();
-            }
+            // Generate a simple session token for now
+            String token = "session-token-" + System.currentTimeMillis() + "-" + authentication.getName();
 
             Object principal = authentication.getPrincipal();
-            CustomUserDetails userDetails;
+            
+            // Handle both CustomUserDetails and Spring Security User
+            String username, fullName, email, department, role;
+            Long userId;
+            
             if (principal instanceof CustomUserDetails) {
-                userDetails = (CustomUserDetails) principal;
+                CustomUserDetails userDetails = (CustomUserDetails) principal;
+                userId = userDetails.getUserId();
+                username = userDetails.getUsername();
+                fullName = userDetails.getFullName();
+                email = userDetails.getEmail();
+                department = userDetails.getDepartment();
+                role = userDetails.getRole();
             } else if (principal instanceof org.springframework.security.core.userdetails.User) {
                 org.springframework.security.core.userdetails.User springUser = (org.springframework.security.core.userdetails.User) principal;
-                // Create a dummy User entity for in-memory users
-                User dummyUser = new User();
-                dummyUser.setId(-1L); // Dummy ID for in-memory users
-                dummyUser.setLdapUsername(springUser.getUsername());
-                dummyUser.setFullName("Admin User");
-                dummyUser.setEmail("admin@localhost");
-                dummyUser.setDepartment("IT");
-                dummyUser.setRole(UserRole.ADMIN);
-                userDetails = new CustomUserDetails(dummyUser, new java.util.ArrayList<>(springUser.getAuthorities()));
+                userId = -1L; // Dummy ID for in-memory users
+                username = springUser.getUsername();
+                fullName = username.equals("admin") ? "Admin User" : 
+                          username.equals("user") ? "Regular User" : 
+                          username.equals("helpdesk-admin") ? "Helpdesk Admin" : "User";
+                email = username + "@localhost";
+                department = "IT";
+                role = springUser.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN")) ? "ADMIN" : "USER";
             } else {
                 throw new RuntimeException("Unknown principal type: " + principal.getClass());
             }
 
             LoginResponse response = new LoginResponse(
-                userDetails.getUser().getId(),
-                userDetails.getUsername(),
-                userDetails.getUser().getFullName(),
-                userDetails.getUser().getEmail(),
-                userDetails.getUser().getDepartment(),
-                userDetails.getUser().getRole().name(),
+                userId,
+                username,
+                fullName,
+                email,
+                department,
+                role,
                 token,
                 "Login successful"
             );
-            System.out.println("Login successful for user: " + userDetails.getUsername());
+            System.out.println("Login successful for user: " + username);
             return ResponseEntity.ok(response);
 
         } catch (BadCredentialsException e) {
@@ -130,21 +130,86 @@ public class AuthController {
         }
 
         Object principal = authentication.getPrincipal();
-        if (!(principal instanceof CustomUserDetails)) {
-            // Log the actual principal type for debugging
-            System.out.println("Principal is not CustomUserDetails: " + principal.getClass().getName());
+        
+        // Handle both CustomUserDetails and Spring Security User
+        Long userId;
+        String username, fullName, email, department, role;
+        
+        if (principal instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) principal;
+            userId = userDetails.getUserId();
+            username = userDetails.getUsername();
+            fullName = userDetails.getFullName();
+            email = userDetails.getEmail();
+            department = userDetails.getDepartment();
+            role = userDetails.getRole();
+        } else if (principal instanceof org.springframework.security.core.userdetails.User) {
+            org.springframework.security.core.userdetails.User springUser = (org.springframework.security.core.userdetails.User) principal;
+            userId = -1L; // Dummy ID for in-memory users
+            username = springUser.getUsername();
+            fullName = username.equals("admin") ? "Admin User" : 
+                      username.equals("user") ? "Regular User" : 
+                      username.equals("helpdesk-admin") ? "Helpdesk Admin" : "User";
+            email = username + "@localhost";
+            department = "IT";
+            role = springUser.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN")) ? "ADMIN" : "USER";
+        } else {
+            System.out.println("Unknown principal type: " + principal.getClass().getName());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        CustomUserDetails userDetails = (CustomUserDetails) principal;
+        UserInfoResponse response = new UserInfoResponse(
+            userId, username, fullName, email, department, role
+        );
+
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * Verify token and return user information
+     */
+    @GetMapping("/verify")
+    public ResponseEntity<UserInfoResponse> verifyToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+            "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Object principal = authentication.getPrincipal();
+        
+        // Handle both CustomUserDetails and Spring Security User
+        Long userId;
+        String username, fullName, email, department, role;
+        
+        if (principal instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) principal;
+            userId = userDetails.getUserId();
+            username = userDetails.getUsername();
+            fullName = userDetails.getFullName();
+            email = userDetails.getEmail();
+            department = userDetails.getDepartment();
+            role = userDetails.getRole();
+        } else if (principal instanceof org.springframework.security.core.userdetails.User) {
+            org.springframework.security.core.userdetails.User springUser = (org.springframework.security.core.userdetails.User) principal;
+            userId = -1L; // Dummy ID for in-memory users
+            username = springUser.getUsername();
+            fullName = username.equals("admin") ? "Admin User" : 
+                      username.equals("user") ? "Regular User" : 
+                      username.equals("helpdesk-admin") ? "Helpdesk Admin" : "User";
+            email = username + "@localhost";
+            department = "IT";
+            role = springUser.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN")) ? "ADMIN" : "USER";
+        } else {
+            System.out.println("Unknown principal type: " + principal.getClass().getName());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         UserInfoResponse response = new UserInfoResponse(
-            userDetails.getUserId(),
-            userDetails.getUsername(),
-            userDetails.getFullName(),
-            userDetails.getEmail(),
-            userDetails.getDepartment(),
-            userDetails.getRole()
+            userId, username, fullName, email, department, role
         );
 
         return ResponseEntity.ok(response);

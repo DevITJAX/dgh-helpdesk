@@ -32,6 +32,40 @@ const Dashboard = () => {
   console.log('Dashboard - isAuthenticated:', isAuthenticated);
   console.log('Dashboard - authLoading:', authLoading);
 
+  // Wait for authentication to complete before rendering
+  if (authLoading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '50vh'
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Redirect if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '50vh'
+        }}
+      >
+        <Alert severity="warning">
+          Please log in to access the dashboard.
+        </Alert>
+      </Box>
+    );
+  }
+
   useEffect(() => {
     const fetchStatistics = async () => {
       try {

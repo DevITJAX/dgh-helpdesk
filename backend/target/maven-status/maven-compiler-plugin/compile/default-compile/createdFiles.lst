@@ -40,6 +40,7 @@ ma\gov\dgh\helpdesk\controller\HealthController.class
 ma\gov\dgh\helpdesk\validation\ValidIpAddress.class
 ma\gov\dgh\helpdesk\service\TicketService$TicketStatistics.class
 ma\gov\dgh\helpdesk\controller\NetworkDiscoveryController$SnmpTestResponse.class
+ma\gov\dgh\helpdesk\security\JwtAuthenticationFilter.class
 ma\gov\dgh\helpdesk\entity\TicketComment.class
 ma\gov\dgh\helpdesk\config\SimpleSecurityConfig.class
 ma\gov\dgh\helpdesk\controller\DashboardController.class

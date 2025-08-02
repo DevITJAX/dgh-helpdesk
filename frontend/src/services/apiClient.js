@@ -6,16 +6,23 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable cookies for session-based auth
 });
 
-// Request interceptor for JWT token
+// Request interceptor for hybrid authentication
 apiClient.interceptors.request.use(
   (config) => {
+    // Try to get the session token from localStorage
     const token = localStorage.getItem('authToken');
-    if (token) {
+    
+    if (token && token !== 'session-based') {
+      // Use the session token as Authorization header
       config.headers['Authorization'] = `Bearer ${token}`;
+      console.log('API Request with token:', config.method?.toUpperCase(), config.url);
+    } else {
+      console.log('API Request without token:', config.method?.toUpperCase(), config.url);
     }
-    config.withCredentials = true; 
+    
     return config;
   },
   (error) => {
@@ -26,24 +33,24 @@ apiClient.interceptors.request.use(
 
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('API Response:', response.status, response.config.url);
+    return response;
+  },
   (error) => {
-    console.error('API Error:', error);
+    console.error('API Error:', error.response?.status, error.config?.url, error.message);
     
     if (error.response) {
       const { status } = error.response;
       
       // Handle authentication errors
       if (status === 401) {
-        // Clear auth state
+        // Clear auth state for session-based auth
         localStorage.removeItem('authToken');
         localStorage.removeItem('dgh_user');
         delete window.__DGH_JWT__;
         
-        // Redirect to login if not already there
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login';
-        }
+        console.log('API: 401 Unauthorized - session expired');
       }
       
       // Handle other HTTP errors
@@ -51,7 +58,7 @@ apiClient.interceptors.response.use(
         console.error('Server error:', error.response.data);
       }
     } else if (error.request) {
-      // Network error
+      // Network error - backend is down or unreachable
       console.error('Network error - backend may be down');
     }
     

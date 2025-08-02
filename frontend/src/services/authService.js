@@ -7,7 +7,7 @@ export const authService = {
         username,
         password,
       });
-      // The backend now returns a more complex object, let's destructure it
+      // The backend returns user info and a session token
       const { token, ...user } = response.data;
       return { token, user };
     } catch (error) {
@@ -21,7 +21,7 @@ export const authService = {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear session from memory regardless of API call success
+      // Clear any stored data
       window.__DGH_AUTH_SESSION__ = null;
     }
   },
@@ -44,16 +44,17 @@ export const authService = {
     }
   },
 
+  // Verify token using the stored session token
   verifyToken: async (token) => {
     try {
-      const response = await apiClient.get('/api/auth/verify', {
+      const response = await apiClient.get('/api/auth/me', {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
       return response.data;
     } catch (error) {
-      throw new Error('Token verification failed');
+      throw new Error('Session verification failed');
     }
   }
 };

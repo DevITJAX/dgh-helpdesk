@@ -1,5 +1,6 @@
 package ma.gov.dgh.helpdesk.config;
 
+import ma.gov.dgh.helpdesk.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -17,6 +18,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import ma.gov.dgh.helpdesk.security.JwtTokenProvider;
 import java.util.Arrays;
 
 @Configuration
@@ -25,10 +28,16 @@ import java.util.Arrays;
 public class DevelopmentSecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public JwtAuthenticationFilter jwtAuthenticationFilter(UserDetailsService userDetailsService, JwtTokenProvider tokenProvider) {
+        return new JwtAuthenticationFilter(tokenProvider, userDetailsService);
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/api/health/**").permitAll()
@@ -36,6 +45,7 @@ public class DevelopmentSecurityConfig {
                 .requestMatchers("/api/auth/logout").permitAll()
                 .requestMatchers("/api/auth/check").permitAll()
                 .requestMatchers("/api/auth/me").permitAll()
+                .requestMatchers("/api/auth/verify").permitAll()
                 .requestMatchers("/api/test/**").permitAll()  // Allow test endpoints
                 .requestMatchers("/api/dashboard/**").permitAll()  // Temporarily allow dashboard endpoints for testing
                 .requestMatchers("/api/users/**").permitAll()  // Temporarily allow user endpoints for testing
@@ -48,11 +58,9 @@ public class DevelopmentSecurityConfig {
             .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
             .sessionManagement(session -> session
                 .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED)
-                .maximumSessions(1)
-                .maxSessionsPreventsLogin(false)
             )
-            .httpBasic(httpBasic -> {})
-            .formLogin(form -> form.disable());
+            .httpBasic(httpBasic -> httpBasic.disable())  // Disable HTTP Basic Auth to prevent popup
+            .formLogin(form -> form.disable());  // Disable form login
         return http.build();
     }
 
@@ -94,10 +102,17 @@ public class DevelopmentSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000", "http://localhost:4200", "http://localhost:*"));
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:3000", 
+            "http://localhost:4200", 
+            "http://localhost:*",
+            "file://*",
+            "null"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowCredentials(true); // Enable credentials for session cookies
         configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

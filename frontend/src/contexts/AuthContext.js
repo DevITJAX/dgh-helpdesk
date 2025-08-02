@@ -80,25 +80,26 @@ export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const location = useLocation();
 
-  // Check for existing token on app load
+  // Check for existing session on app load
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
         const token = localStorage.getItem('authToken');
         console.log('AuthContext: Checking for existing token:', token ? 'Found' : 'Not found');
         
-        if (token) {
-          // Try to verify token with backend
+        if (token && token.trim() !== '') {
+          // Try to verify the stored token
           try {
+            console.log('AuthContext: Attempting to verify stored token...');
             const user = await authService.verifyToken(token);
             console.log('AuthContext: Token verification successful:', user);
+            
             dispatch({
               type: AUTH_ACTIONS.LOGIN_SUCCESS,
               payload: { user, token }
             });
           } catch (verifyError) {
             console.log('AuthContext: Token verification failed, trying getUserInfo instead');
-            // Fallback: try to get user info
             try {
               const user = await authService.getUserInfo();
               console.log('AuthContext: getUserInfo successful:', user);
@@ -112,6 +113,10 @@ export const AuthProvider = ({ children }) => {
               dispatch({ type: AUTH_ACTIONS.LOGOUT });
             }
           }
+        } else {
+          // No token found, ensure we're logged out
+          console.log('AuthContext: No token found, staying logged out');
+          dispatch({ type: AUTH_ACTIONS.LOGOUT });
         }
       } catch (error) {
         console.error('AuthContext: Error checking auth status:', error);
@@ -129,14 +134,17 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     console.log('AuthContext: Starting login process');
     dispatch({ type: AUTH_ACTIONS.LOGIN_START });
+    
     try {
       console.log('AuthContext: Calling authService.login');
       const { user, token } = await authService.login(username, password);
       console.log('AuthContext: Login response:', { user, token });
       
-      // Store token in localStorage (for persistence)
-      localStorage.setItem('authToken', token);
-      console.log('AuthContext: Token stored in localStorage');
+      // Store the session token for API calls
+      if (token) {
+        localStorage.setItem('authToken', token);
+        console.log('AuthContext: Session token stored for API calls');
+      }
       
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -147,11 +155,30 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error('AuthContext: Login error:', error);
+      
+      let errMsg = 'Login failed';
+      
+      // Handle different types of errors
+      if (error.message?.includes('Network Error') || error.code === 'ERR_NETWORK') {
+        errMsg = 'Cannot connect to server. Please check if the backend is running.';
+      } else if (error.response?.status === 401) {
+        errMsg = 'Invalid username or password.';
+      } else if (error.response?.status === 500) {
+        errMsg = 'Server error. Please try again later.';
+      } else if (error.response?.data?.message) {
+        errMsg = error.response.data.message;
+      } else if (error.message) {
+        errMsg = error.message;
+      }
+      
+      console.error('AuthContext: Final error message:', errMsg);
+      
       dispatch({
         type: AUTH_ACTIONS.LOGIN_FAILURE,
-        payload: error.message || 'Login failed'
+        payload: errMsg
       });
-      return { success: false, error: error.message };
+      
+      return { success: false, error: errMsg };
     }
   };
 
