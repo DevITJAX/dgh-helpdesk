@@ -22,11 +22,16 @@ VALUES
 -- Insert sample tickets (using admin user ID 1 for all relationships)
 INSERT INTO tickets (title, description, priority, status, category, created_by, assigned_to, equipment_id, created_at, updated_at)
 VALUES 
-('Printer not working', 'The printer in Finance department is not responding to print jobs', 'HIGH', 'OPEN', 'PRINTER', 1, 1, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Slow computer performance', 'My computer is running very slowly, especially when opening applications', 'MEDIUM', 'IN_PROGRESS', 'HARDWARE', 1, 1, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Email access issue', 'Cannot access email from Outlook, getting authentication errors', 'HIGH', 'OPEN', 'EMAIL', 1, null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Network connectivity problem', 'Internet connection keeps dropping every few minutes', 'CRITICAL', 'OPEN', 'NETWORK', 1, 1, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Software installation request', 'Need Adobe Acrobat Pro installed on my workstation', 'LOW', 'OPEN', 'REQUEST', 1, null, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('Printer not working', 'The printer in Finance department is not responding to print jobs', 'HIGH', 'OPEN', 'PRINTER', 1, 2, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Slow computer performance', 'My computer is running very slowly, especially when opening applications', 'MEDIUM', 'IN_PROGRESS', 'HARDWARE', 1, 2, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Email access issue', 'Cannot access email from Outlook, getting authentication errors', 'HIGH', 'OPEN', 'EMAIL', 1, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Network connectivity problem', 'Internet connection keeps dropping every few minutes', 'CRITICAL', 'OPEN', 'NETWORK', 1, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Software installation request', 'Need Adobe Acrobat Pro installed on my workstation', 'LOW', 'OPEN', 'REQUEST', 1, null, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Monitor display issue', 'Monitor shows flickering and distorted colors', 'MEDIUM', 'IN_PROGRESS', 'HARDWARE', 4, 2, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('VPN connection problem', 'Cannot connect to VPN from home office', 'HIGH', 'OPEN', 'NETWORK', 5, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Finance software access', 'Need access to the new accounting software', 'MEDIUM', 'OPEN', 'REQUEST', 4, null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('HR system login issue', 'Cannot log into the HR management system', 'HIGH', 'RESOLVED', 'SOFTWARE', 5, 2, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Printer cartridge replacement', 'Printer needs new black ink cartridge', 'LOW', 'OPEN', 'PRINTER', 4, null, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert sample ticket comments (using admin user ID 1)
 INSERT INTO ticket_comments (ticket_id, user_id, comment, is_internal, created_at, comment_type)

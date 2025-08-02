@@ -91,7 +91,32 @@ public class DevelopmentSecurityConfig {
             .roles("ADMIN")
             .build();
 
-        return new InMemoryUserDetailsManager(admin, user, helpdeskAdmin);
+        // Add database users for testing different roles
+        UserDetails johnDoe = User.builder()
+            .username("john.doe")
+            .password(passwordEncoder().encode("password123"))
+            .roles("TECHNICIAN")
+            .build();
+
+        UserDetails janeSmith = User.builder()
+            .username("jane.smith")
+            .password(passwordEncoder().encode("password123"))
+            .roles("TECHNICIAN")
+            .build();
+
+        UserDetails aliceFinance = User.builder()
+            .username("alice.finance")
+            .password(passwordEncoder().encode("password123"))
+            .roles("EMPLOYEE")
+            .build();
+
+        UserDetails bobHr = User.builder()
+            .username("bob.hr")
+            .password(passwordEncoder().encode("password123"))
+            .roles("EMPLOYEE")
+            .build();
+
+        return new InMemoryUserDetailsManager(admin, user, helpdeskAdmin, johnDoe, janeSmith, aliceFinance, bobHr);
     }
 
     @Bean

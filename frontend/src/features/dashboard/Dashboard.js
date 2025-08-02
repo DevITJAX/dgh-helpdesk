@@ -13,13 +13,20 @@ import {
 import {
   BugReport,
   People,
-  Computer
+  Computer,
+  Assignment,
+  CheckCircle,
+  Schedule,
+  TrendingUp
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import dashboardService from '../../services/dashboardService';
 import UserInfo from '../../components/common/UserInfo';
 import DatabaseViewer from '../../components/common/DatabaseViewer';
 import H2ConsoleInfo from '../../components/common/H2ConsoleInfo';
+import TechnicianDashboard from './TechnicianDashboard';
+import AdminDashboard from './AdminDashboard';
+import EmployeeDashboard from './EmployeeDashboard';
 
 const Dashboard = () => {
   const [statistics, setStatistics] = useState(null);
@@ -83,48 +90,22 @@ const Dashboard = () => {
     fetchStatistics();
   }, []);
 
-  const StatCard = ({ title, value, icon, color = 'primary.main' }) => (
-    <Card sx={{ height: '100%' }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Box
-            sx={{
-              backgroundColor: color,
-              borderRadius: '50%',
-              p: 1,
-              mr: 2,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {icon}
-          </Box>
-          <Typography variant="h6" component="div">
-            {title}
-          </Typography>
-        </Box>
-        <Typography variant="h4" component="div" sx={{ fontWeight: 'bold' }}>
-          {value}
-        </Typography>
-      </CardContent>
-    </Card>
-  );
+  // Render role-specific dashboard
+  const renderRoleBasedDashboard = () => {
+    if (!user || !user.role) {
+      return <EmployeeDashboard statistics={statistics} loading={loading} error={error} />;
+    }
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '50vh'
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
+    switch (user.role) {
+      case 'ADMIN':
+        return <AdminDashboard statistics={statistics} loading={loading} error={error} />;
+      case 'TECHNICIAN':
+        return <TechnicianDashboard statistics={statistics} loading={loading} error={error} />;
+      case 'EMPLOYEE':
+      default:
+        return <EmployeeDashboard statistics={statistics} loading={loading} error={error} />;
+    }
+  };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -152,68 +133,8 @@ const Dashboard = () => {
         </Alert>
       )}
 
-      <Grid container spacing={3}>
-        {/* Statistics Cards */}
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Total Tickets"
-            value={statistics?.ticketStatistics?.totalTickets || 0}
-            icon={<BugReport sx={{ color: 'white' }} />}
-            color="primary.main"
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Open Tickets"
-            value={statistics?.ticketStatistics?.openTickets || 0}
-            icon={<BugReport sx={{ color: 'white' }} />}
-            color="warning.main"
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Total Users"
-            value={statistics?.userStatistics?.totalUsers || 0}
-            icon={<People sx={{ color: 'white' }} />}
-            color="success.main"
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Equipment"
-            value={statistics?.equipmentStatistics?.totalEquipment || 0}
-            icon={<Computer sx={{ color: 'white' }} />}
-            color="info.main"
-          />
-        </Grid>
-
-        {/* Recent Activity */}
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Recent Activity
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              No recent activity to display.
-            </Typography>
-          </Paper>
-        </Grid>
-
-        {/* Quick Actions */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Quick Actions
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Quick action buttons will be added here.
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+      {/* Render role-specific dashboard content */}
+      {renderRoleBasedDashboard()}
     </Container>
   );
 };
