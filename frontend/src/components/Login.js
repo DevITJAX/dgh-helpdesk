@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { LockOutlined } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import dghLogo from '../dgh_logo.png';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -139,41 +140,92 @@ const Login = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          minHeight: '100vh'
-        }}
-      >
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+        p: 2
+      }}
+    >
+      <Container component="main" maxWidth="xs">
         <Paper
-          elevation={3}
+          elevation={8}
           sx={{
             padding: 4,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             width: '100%',
-            maxWidth: 400
+            maxWidth: 400,
+            borderRadius: 2,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)'
           }}
         >
-          <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
-            <LockOutlined />
-          </Avatar>
+          {/* DGH Logo - Centered */}
+          <Box 
+            sx={{ 
+              mb: 4, 
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Avatar
+              src={dghLogo}
+              alt="DGH Logo"
+              sx={{ 
+                width: 100, 
+                height: 100, 
+                mb: 3,
+                borderRadius: '16px',
+                boxShadow: 4,
+                border: '3px solid #1976d2'
+              }}
+            />
+            <Typography 
+              component="h1" 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 'bold', 
+                color: 'primary.main',
+                textAlign: 'center',
+                mb: 1
+              }}
+            >
+              DGH HelpDesk
+            </Typography>
+            <Typography 
+              variant="body1" 
+              color="text.secondary" 
+              sx={{ 
+                textAlign: 'center',
+                fontWeight: 'medium'
+              }}
+            >
+              Direction Générale de l'Hydraulique
+            </Typography>
+          </Box>
           
-          <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
-            DGH HelpDesk
-          </Typography>
-          
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 4, 
+              textAlign: 'center',
+              maxWidth: 300
+            }}
+          >
             Sign in to access the IT HelpDesk Management System
           </Typography>
 
           {globalError && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+            <Alert severity="error" sx={{ width: '100%', mb: 3 }}>
               {globalError}
             </Alert>
           )}
@@ -193,6 +245,7 @@ const Login = () => {
               error={!!errors.username}
               helperText={errors.username}
               disabled={isSubmitting}
+              sx={{ mb: 2 }}
             />
             
             <TextField
@@ -209,13 +262,20 @@ const Login = () => {
               error={!!errors.password}
               helperText={errors.password}
               disabled={isSubmitting}
+              sx={{ mb: 3 }}
             />
             
             <Button
               type="button"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2, py: 1.5 }}
+              sx={{ 
+                py: 1.5,
+                fontSize: '1.1rem',
+                fontWeight: 'bold',
+                borderRadius: 2,
+                boxShadow: 3
+              }}
               disabled={isSubmitting}
               onClick={handleButtonClick}
             >
@@ -227,8 +287,8 @@ const Login = () => {
             </Button>
           </Box>
         </Paper>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

@@ -114,7 +114,7 @@ SELECT
     CASE 
         WHEN ROLE = 'ADMIN' AND COUNT(*) >= 1 THEN 'PASS: Admin users exist'
         WHEN ROLE = 'TECHNICIAN' AND COUNT(*) >= 1 THEN 'PASS: Technician users exist'
-        WHEN ROLE = 'USER' THEN 'INFO: Regular users exist'
+        WHEN ROLE = 'EMPLOYEE' AND COUNT(*) >= 1 THEN 'PASS: Employee users exist'
         ELSE 'INFO: Role distribution'
     END as role_check
 FROM USERS 

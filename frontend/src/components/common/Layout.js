@@ -13,20 +13,19 @@ import {
   Divider,
   useTheme,
   useMediaQuery,
-  Tooltip
+  Tooltip,
+  Avatar
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  Dashboard,
-  BugReport,
-  People,
-  Computer,
-  Person,
   Logout,
   AccountCircle
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { getNavigationItems } from '../../constants/navigationConfig';
+import { getRoleDisplayName } from '../../utils/roleDisplay';
+import dghLogo from '../../dgh_logo.png';
 
 const Layout = ({ children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -36,13 +35,8 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const menuItems = [
-    { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
-    { text: 'Tickets', icon: <BugReport />, path: '/tickets' },
-    { text: 'Users', icon: <People />, path: '/users' },
-    { text: 'Equipment', icon: <Computer />, path: '/equipment' },
-    { text: 'Profile', icon: <Person />, path: '/profile' }
-  ];
+  // Get navigation items based on user role
+  const menuItems = getNavigationItems(user?.role);
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -62,12 +56,27 @@ const Layout = ({ children }) => {
 
   const drawer = (
     <Box sx={{ width: 250 }}>
-      <Box sx={{ p: 2 }}>
-        <Typography variant="h6" noWrap component="div">
+      <Box sx={{ p: 2, textAlign: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+          <Avatar
+            src={dghLogo}
+            alt="DGH Logo"
+            sx={{ 
+              width: 60, 
+              height: 60,
+              borderRadius: '8px',
+              boxShadow: 2
+            }}
+          />
+        </Box>
+        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
           DGH HelpDesk
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
           {user?.displayName || user?.username}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {getRoleDisplayName(user?.role)}
         </Typography>
       </Box>
       <Divider />
@@ -113,9 +122,24 @@ const Layout = ({ children }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {menuItems.find(item => item.path === location.pathname)?.text || 'DGH HelpDesk'}
-          </Typography>
+          
+          {/* Logo and Title */}
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+            <Avatar
+              src={dghLogo}
+              alt="DGH Logo"
+              sx={{ 
+                width: 40, 
+                height: 40, 
+                mr: 2,
+                borderRadius: '6px',
+                boxShadow: 1
+              }}
+            />
+            <Typography variant="h6" noWrap component="div">
+              {menuItems.find(item => item.path === location.pathname)?.text || 'DGH HelpDesk'}
+            </Typography>
+          </Box>
           
           {/* User Profile Button */}
           <Tooltip title="Profile">

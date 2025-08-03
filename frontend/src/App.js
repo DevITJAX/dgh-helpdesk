@@ -10,6 +10,7 @@ import Users from './features/users/Users';
 import Equipment from './features/equipment/Equipment';
 import Profile from './features/auth/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
+import RoleBasedRoute from './components/RoleBasedRoute';
 import Layout from './components/common/Layout';
 
 // Create Material-UI theme
@@ -56,9 +57,11 @@ function App() {
               path="/users" 
               element={
                 <ProtectedRoute>
-                  <Layout>
-                    <Users />
-                  </Layout>
+                  <RoleBasedRoute requiredRole="ADMIN">
+                    <Layout>
+                      <Users />
+                    </Layout>
+                  </RoleBasedRoute>
                 </ProtectedRoute>
               } 
             />
@@ -66,9 +69,11 @@ function App() {
               path="/equipment" 
               element={
                 <ProtectedRoute>
-                  <Layout>
-                    <Equipment />
-                  </Layout>
+                  <RoleBasedRoute requiredRole={['ADMIN', 'TECHNICIAN']}>
+                    <Layout>
+                      <Equipment />
+                    </Layout>
+                  </RoleBasedRoute>
                 </ProtectedRoute>
               } 
             />

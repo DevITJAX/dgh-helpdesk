@@ -77,8 +77,17 @@ public class AuthController {
                           username.equals("helpdesk-admin") ? "Helpdesk Admin" : "User";
                 email = username + "@localhost";
                 department = "IT";
-                role = springUser.getAuthorities().stream()
-                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN")) ? "ADMIN" : "USER";
+                
+                // Map Spring Security roles to UserRole enum values
+                if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+                    role = "ADMIN";
+                } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_TECHNICIAN"))) {
+                    role = "TECHNICIAN";
+                } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_EMPLOYEE"))) {
+                    role = "EMPLOYEE";
+                } else {
+                    role = "EMPLOYEE"; // Default to EMPLOYEE for regular users
+                }
             } else {
                 throw new RuntimeException("Unknown principal type: " + principal.getClass());
             }
@@ -152,8 +161,17 @@ public class AuthController {
                       username.equals("helpdesk-admin") ? "Helpdesk Admin" : "User";
             email = username + "@localhost";
             department = "IT";
-            role = springUser.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN")) ? "ADMIN" : "USER";
+            
+            // Map Spring Security roles to UserRole enum values
+            if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+                role = "ADMIN";
+            } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_TECHNICIAN"))) {
+                role = "TECHNICIAN";
+            } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_EMPLOYEE"))) {
+                role = "EMPLOYEE";
+            } else {
+                role = "EMPLOYEE"; // Default to EMPLOYEE for regular users
+            }
         } else {
             System.out.println("Unknown principal type: " + principal.getClass().getName());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

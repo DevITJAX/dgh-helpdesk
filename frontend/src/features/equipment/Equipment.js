@@ -14,6 +14,7 @@ import EquipmentStatistics from './components/EquipmentStatistics';
 import EquipmentForm from './components/EquipmentForm';
 import NetworkDiscovery from './components/NetworkDiscovery';
 import { equipmentService } from '../../services/equipmentService';
+import { useAuth } from '../../contexts/AuthContext';
 
 function TabPanel({ children, value, index, ...other }) {
   return (
@@ -34,6 +35,7 @@ function TabPanel({ children, value, index, ...other }) {
 }
 
 const Equipment = () => {
+  const { user } = useAuth();
   const [tabValue, setTabValue] = useState(0);
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -250,6 +252,7 @@ const Equipment = () => {
             onUpdateStatus={handleUpdateStatus}
             onMarkAsManaged={handleMarkAsManaged}
             onMarkAsUnmanaged={handleMarkAsUnmanaged}
+            userRole={user?.role}
           />
         </TabPanel>
 

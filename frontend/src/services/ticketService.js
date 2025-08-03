@@ -167,4 +167,125 @@ export const ticketService = {
       throw new Error(error.response?.data?.message || 'Failed to fetch ticket statistics');
     }
   },
+
+  // ===== NEW TECHNICIAN-SPECIFIC METHODS =====
+
+  // Get unassigned tickets with filtering
+  getUnassignedTicketsWithFilters: async (filters = {}) => {
+    try {
+      const params = {
+        assignedToId: null,
+        status: 'OPEN',
+        ...filters
+      };
+      const response = await apiClient.get('/api/tickets', { params });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch unassigned tickets');
+    }
+  },
+
+  // Self-assign ticket (technician assigns to themselves)
+  assignTicketToSelf: async (ticketId, technicianId) => {
+    try {
+      const response = await apiClient.put(`/api/tickets/${ticketId}/assign`, {
+        assignedToId: technicianId,
+        assignedAt: new Date().toISOString(),
+        assignedBy: technicianId // Self-assignment
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to self-assign ticket');
+    }
+  },
+
+  // Escalate ticket with detailed information
+  escalateTicketWithDetails: async (ticketId, escalationData) => {
+    try {
+      const response = await apiClient.put(`/api/tickets/${ticketId}/escalate`, {
+        ...escalationData,
+        escalatedAt: new Date().toISOString()
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to escalate ticket');
+    }
+  },
+
+  // Add time tracking to ticket
+  addTimeTracking: async (ticketId, timeData) => {
+    try {
+      const response = await apiClient.post(`/api/tickets/${ticketId}/time-tracking`, {
+        ...timeData,
+        trackedAt: new Date().toISOString()
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to add time tracking');
+    }
+  },
+
+  // Reopen a closed ticket
+  reopenTicket: async (ticketId, reason) => {
+    try {
+      const response = await apiClient.put(`/api/tickets/${ticketId}/reopen`, { 
+        reason,
+        reopenedAt: new Date().toISOString()
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to reopen ticket');
+    }
+  },
+
+  // Get technician's assigned tickets with statistics
+  getTechnicianTickets: async (technicianId, filters = {}) => {
+    try {
+      const params = {
+        assignedToId: technicianId,
+        ...filters
+      };
+      const response = await apiClient.get('/api/tickets', { params });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch technician tickets');
+    }
+  },
+
+  // Get technician performance statistics
+  getTechnicianStatistics: async (technicianId) => {
+    try {
+      const response = await apiClient.get(`/api/tickets/technician/${technicianId}/statistics`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch technician statistics');
+    }
+  },
+
+  // Add attachment to ticket
+  addAttachment: async (ticketId, file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await apiClient.post(`/api/tickets/${ticketId}/attachments`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to add attachment');
+    }
+  },
+
+  // Get ticket attachments
+  getTicketAttachments: async (ticketId) => {
+    try {
+      const response = await apiClient.get(`/api/tickets/${ticketId}/attachments`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch attachments');
+    }
+  }
 };

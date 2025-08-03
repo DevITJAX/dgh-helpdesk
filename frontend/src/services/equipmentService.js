@@ -225,5 +225,144 @@ export const equipmentService = {
       console.error('EquipmentService: Error searching equipment:', error);
       throw error;
     }
+  },
+
+  // ===== NEW TECHNICIAN-SPECIFIC METHODS =====
+
+  // Add maintenance note to equipment
+  addMaintenanceNote: async (equipmentId, noteData) => {
+    try {
+      const response = await apiClient.post(`/api/equipment/${equipmentId}/maintenance-notes`, {
+        ...noteData,
+        addedAt: new Date().toISOString()
+      });
+      return response.data;
+    } catch (error) {
+      console.error('EquipmentService: Error adding maintenance note:', error);
+      throw error;
+    }
+  },
+
+  // Get maintenance notes for equipment
+  getMaintenanceNotes: async (equipmentId) => {
+    try {
+      const response = await apiClient.get(`/api/equipment/${equipmentId}/maintenance-notes`);
+      return response.data;
+    } catch (error) {
+      console.error('EquipmentService: Error fetching maintenance notes:', error);
+      throw error;
+    }
+  },
+
+  // Update equipment location
+  updateEquipmentLocation: async (equipmentId, location) => {
+    try {
+      const response = await apiClient.put(`/api/equipment/${equipmentId}/location`, { location });
+      return response.data;
+    } catch (error) {
+      console.error('EquipmentService: Error updating equipment location:', error);
+      throw error;
+    }
+  },
+
+  // Mark equipment for maintenance
+  markForMaintenance: async (equipmentId, maintenanceData) => {
+    try {
+      const response = await apiClient.put(`/api/equipment/${equipmentId}/maintenance`, {
+        ...maintenanceData,
+        markedAt: new Date().toISOString()
+      });
+      return response.data;
+    } catch (error) {
+      console.error('EquipmentService: Error marking equipment for maintenance:', error);
+      throw error;
+    }
+  },
+
+  // Ping equipment for connectivity test
+  pingEquipment: async (equipmentId) => {
+    try {
+      const response = await apiClient.post(`/api/equipment/${equipmentId}/ping`);
+      return response.data;
+    } catch (error) {
+      console.error('EquipmentService: Error pinging equipment:', error);
+      throw error;
+    }
+  },
+
+  // Get detailed equipment information (SNMP data)
+  getEquipmentDetails: async (equipmentId) => {
+    try {
+      const response = await apiClient.get(`/api/equipment/${equipmentId}/details`);
+      return response.data;
+    } catch (error) {
+      console.error('EquipmentService: Error fetching equipment details:', error);
+      throw error;
+    }
+  },
+
+  // Create maintenance ticket for equipment
+  createMaintenanceTicket: async (equipmentId, ticketData) => {
+    try {
+      const response = await apiClient.post(`/api/equipment/${equipmentId}/maintenance-ticket`, {
+        ...ticketData,
+        equipmentId,
+        createdAt: new Date().toISOString()
+      });
+      return response.data;
+    } catch (error) {
+      console.error('EquipmentService: Error creating maintenance ticket:', error);
+      throw error;
+    }
+  },
+
+  // Schedule preventive maintenance
+  scheduleMaintenance: async (equipmentId, scheduleData) => {
+    try {
+      const response = await apiClient.post(`/api/equipment/${equipmentId}/schedule-maintenance`, {
+        ...scheduleData,
+        scheduledAt: new Date().toISOString()
+      });
+      return response.data;
+    } catch (error) {
+      console.error('EquipmentService: Error scheduling maintenance:', error);
+      throw error;
+    }
+  },
+
+  // Get equipment alerts/issues
+  getEquipmentAlerts: async (equipmentId) => {
+    try {
+      const response = await apiClient.get(`/api/equipment/${equipmentId}/alerts`);
+      return response.data;
+    } catch (error) {
+      console.error('EquipmentService: Error fetching equipment alerts:', error);
+      throw error;
+    }
+  },
+
+  // Update equipment inventory (add/remove equipment)
+  updateInventory: async (inventoryData) => {
+    try {
+      const response = await apiClient.post('/api/equipment/inventory', {
+        ...inventoryData,
+        updatedAt: new Date().toISOString()
+      });
+      return response.data;
+    } catch (error) {
+      console.error('EquipmentService: Error updating inventory:', error);
+      throw error;
+    }
+  },
+
+  // Get equipment by technician's assigned area/location
+  getEquipmentByTechnicianArea: async (technicianId) => {
+    try {
+      const response = await apiClient.get(`/api/equipment/technician/${technicianId}/area`);
+      return response.data;
+    } catch (error) {
+      console.error('EquipmentService: Error fetching equipment by technician area:', error);
+      throw error;
+    }
   }
 };

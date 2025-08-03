@@ -26,25 +26,53 @@ VALUES
 ('Slow computer performance', 'My computer is running very slowly, especially when opening applications', 'MEDIUM', 'IN_PROGRESS', 'HARDWARE', 1, 2, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('Email access issue', 'Cannot access email from Outlook, getting authentication errors', 'HIGH', 'OPEN', 'EMAIL', 1, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('Network connectivity problem', 'Internet connection keeps dropping every few minutes', 'CRITICAL', 'OPEN', 'NETWORK', 1, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Software installation request', 'Need Adobe Acrobat Pro installed on my workstation', 'LOW', 'OPEN', 'REQUEST', 1, null, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Software installation request', 'Need Adobe Acrobat Pro installed on my workstation', 'LOW', 'OPEN', 'REQUEST', 1, 2, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('Monitor display issue', 'Monitor shows flickering and distorted colors', 'MEDIUM', 'IN_PROGRESS', 'HARDWARE', 4, 2, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('VPN connection problem', 'Cannot connect to VPN from home office', 'HIGH', 'OPEN', 'NETWORK', 5, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Finance software access', 'Need access to the new accounting software', 'MEDIUM', 'OPEN', 'REQUEST', 4, null, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Finance software access', 'Need access to the new accounting software', 'MEDIUM', 'OPEN', 'REQUEST', 4, 2, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('HR system login issue', 'Cannot log into the HR management system', 'HIGH', 'RESOLVED', 'SOFTWARE', 5, 2, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Printer cartridge replacement', 'Printer needs new black ink cartridge', 'LOW', 'OPEN', 'PRINTER', 4, null, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('Printer cartridge replacement', 'Printer needs new black ink cartridge', 'LOW', 'OPEN', 'PRINTER', 4, 3, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Server maintenance request', 'Need to schedule maintenance for server-01', 'MEDIUM', 'OPEN', 'REQUEST', 1, 2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Switch configuration issue', 'Network switch showing connectivity problems', 'HIGH', 'IN_PROGRESS', 'NETWORK', 1, 3, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Desktop upgrade request', 'Need RAM upgrade for better performance', 'LOW', 'OPEN', 'HARDWARE', 4, 2, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Software license renewal', 'Adobe Creative Suite license expires next month', 'MEDIUM', 'OPEN', 'REQUEST', 5, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Backup system check', 'Need to verify backup system is working properly', 'HIGH', 'OPEN', 'REQUEST', 1, 2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert sample ticket comments (using admin user ID 1)
 INSERT INTO ticket_comments (ticket_id, user_id, comment, is_internal, created_at, comment_type)
 VALUES 
 (1, 1, 'The printer was working fine yesterday, but today it shows offline status', false, CURRENT_TIMESTAMP, 'COMMENT'),
-(1, 1, 'I will check the printer connection and drivers', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(1, 2, 'I will check the printer connection and drivers', true, CURRENT_TIMESTAMP, 'COMMENT'),
 (2, 1, 'The slowness started after the last Windows update', false, CURRENT_TIMESTAMP, 'COMMENT'),
 (2, 1, 'Ticket assigned to technician', true, CURRENT_TIMESTAMP, 'ASSIGNMENT_CHANGE'),
-(2, 1, 'Running diagnostic tests on the hardware', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(2, 2, 'Running diagnostic tests on the hardware', true, CURRENT_TIMESTAMP, 'COMMENT'),
 (3, 1, 'This started happening this morning around 9 AM', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(3, 3, 'Checking email server configuration', true, CURRENT_TIMESTAMP, 'COMMENT'),
 (4, 1, 'This is affecting my work productivity significantly', false, CURRENT_TIMESTAMP, 'COMMENT'),
 (4, 1, 'Priority escalated to CRITICAL', true, CURRENT_TIMESTAMP, 'PRIORITY_CHANGE'),
-(5, 1, 'This is needed for document processing in Finance department', false, CURRENT_TIMESTAMP, 'COMMENT');
+(4, 3, 'Investigating network infrastructure', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(5, 1, 'This is needed for document processing in Finance department', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(5, 2, 'Software installation scheduled for tomorrow', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(6, 4, 'Monitor issue started after power outage', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(6, 2, 'Ordering replacement monitor', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(7, 5, 'VPN worked fine last week, issue started today', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(7, 3, 'Checking VPN server logs', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(8, 4, 'Need access for quarterly reporting', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(8, 2, 'Setting up user permissions', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(9, 5, 'Cannot access HR system since yesterday', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(9, 2, 'Issue resolved - password reset completed', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(10, 4, 'Printer showing low ink warning', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(10, 3, 'Ordering replacement cartridge', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(11, 1, 'Regular maintenance due this month', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(11, 2, 'Scheduling maintenance window', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(12, 1, 'Switch showing packet loss', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(12, 3, 'Investigating switch configuration', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(13, 4, 'Computer running slow with multiple applications', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(13, 2, 'RAM upgrade approved, ordering parts', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(14, 5, 'License expires on 15th of next month', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(14, 3, 'Processing license renewal', true, CURRENT_TIMESTAMP, 'COMMENT'),
+(15, 1, 'Backup system not responding to scheduled jobs', false, CURRENT_TIMESTAMP, 'COMMENT'),
+(15, 2, 'Running backup system diagnostics', true, CURRENT_TIMESTAMP, 'COMMENT');
 
 -- Create indexes for better performance (if not already created by JPA)
 CREATE INDEX IF NOT EXISTS idx_tickets_created_at ON tickets(created_at);

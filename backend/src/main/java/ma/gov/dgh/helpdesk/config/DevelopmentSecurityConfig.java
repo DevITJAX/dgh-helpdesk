@@ -82,7 +82,7 @@ public class DevelopmentSecurityConfig {
         UserDetails user = User.builder()
             .username("user")
             .password(passwordEncoder().encode("user123"))
-            .roles("USER")
+            .roles("EMPLOYEE")
             .build();
 
         UserDetails helpdeskAdmin = User.builder()

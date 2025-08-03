@@ -13,6 +13,8 @@ ma\gov\dgh\helpdesk\exception\BusinessException$UnauthorizedOperationException.c
 ma\gov\dgh\helpdesk\controller\TicketController$TicketCreateRequest.class
 ma\gov\dgh\helpdesk\controller\TicketController$TicketUpdateRequest.class
 ma\gov\dgh\helpdesk\entity\EquipmentStatus.class
+ma\gov\dgh\helpdesk\entity\ActivityLog.class
+ma\gov\dgh\helpdesk\controller\ActivityLogController.class
 ma\gov\dgh\helpdesk\controller\HealthController$DetailedHealthStatus.class
 ma\gov\dgh\helpdesk\controller\HealthController$ComponentHealth.class
 ma\gov\dgh\helpdesk\controller\TicketController.class
@@ -20,6 +22,7 @@ ma\gov\dgh\helpdesk\controller\EquipmentController$DiscoveryRequest.class
 ma\gov\dgh\helpdesk\repository\EquipmentRepository.class
 ma\gov\dgh\helpdesk\exception\BusinessException$DuplicateUserException.class
 ma\gov\dgh\helpdesk\controller\TicketController$StatusChangeRequest.class
+ma\gov\dgh\helpdesk\repository\ActivityLogRepository.class
 ma\gov\dgh\helpdesk\exception\BusinessException$TicketNotFoundException.class
 ma\gov\dgh\helpdesk\service\EquipmentService$EquipmentStatistics.class
 ma\gov\dgh\helpdesk\controller\NetworkDiscoveryController.class
@@ -36,11 +39,14 @@ ma\gov\dgh\helpdesk\entity\UserRole.class
 ma\gov\dgh\helpdesk\entity\Ticket.class
 ma\gov\dgh\helpdesk\exception\BusinessException$NetworkDiscoveryException.class
 ma\gov\dgh\helpdesk\controller\AuthController$AuthCheckResponse.class
+ma\gov\dgh\helpdesk\controller\DashboardController$TechnicianPerformance.class
 ma\gov\dgh\helpdesk\controller\HealthController.class
 ma\gov\dgh\helpdesk\validation\ValidIpAddress.class
 ma\gov\dgh\helpdesk\service\TicketService$TicketStatistics.class
 ma\gov\dgh\helpdesk\controller\NetworkDiscoveryController$SnmpTestResponse.class
 ma\gov\dgh\helpdesk\security\JwtAuthenticationFilter.class
+ma\gov\dgh\helpdesk\controller\DashboardController$TechnicianEquipmentStats.class
+ma\gov\dgh\helpdesk\controller\DashboardController$TechnicianStatistics.class
 ma\gov\dgh\helpdesk\entity\TicketComment.class
 ma\gov\dgh\helpdesk\config\SimpleSecurityConfig.class
 ma\gov\dgh\helpdesk\controller\DashboardController.class
@@ -49,6 +55,7 @@ ma\gov\dgh\helpdesk\exception\BusinessException.class
 ma\gov\dgh\helpdesk\controller\UserController$LdapSyncRequest.class
 ma\gov\dgh\helpdesk\dgh_helpdesk\DghHelpdeskApplication.class
 ma\gov\dgh\helpdesk\controller\TicketController$EscalateTicketRequest.class
+ma\gov\dgh\helpdesk\controller\DashboardController$TechnicianWorkload.class
 ma\gov\dgh\helpdesk\controller\TestController.class
 ma\gov\dgh\helpdesk\entity\User.class
 ma\gov\dgh\helpdesk\exception\GlobalExceptionHandler.class
@@ -60,7 +67,10 @@ ma\gov\dgh\helpdesk\exception\BusinessException$UserNotFoundException.class
 ma\gov\dgh\helpdesk\controller\EquipmentController$StatusUpdateRequest.class
 ma\gov\dgh\helpdesk\service\TicketService$1.class
 ma\gov\dgh\helpdesk\controller\AuthController$UserInfoResponse.class
+ma\gov\dgh\helpdesk\service\ActivityLogService.class
 ma\gov\dgh\helpdesk\controller\AuthController$LoginRequest.class
+ma\gov\dgh\helpdesk\entity\LogSeverity.class
+ma\gov\dgh\helpdesk\controller\DashboardController$TechnicianTimeTracking.class
 ma\gov\dgh\helpdesk\security\CustomLdapAuthenticationProvider$1.class
 ma\gov\dgh\helpdesk\security\CustomUserDetailsService$1.class
 ma\gov\dgh\helpdesk\service\SnmpDeviceInfo.class

@@ -75,7 +75,8 @@ const EquipmentList = ({
   onDeleteEquipment,
   onUpdateStatus,
   onMarkAsManaged,
-  onMarkAsUnmanaged
+  onMarkAsUnmanaged,
+  userRole
 }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
@@ -564,12 +565,14 @@ const EquipmentList = ({
         
         <Divider />
         
-        <MenuItem onClick={() => handleDeleteClick(selectedEquipment)} sx={{ color: 'error.main' }}>
-          <ListItemIcon>
-            <DeleteIcon fontSize="small" color="error" />
-          </ListItemIcon>
-          <ListItemText>Delete Equipment</ListItemText>
-        </MenuItem>
+        {userRole === 'ADMIN' && (
+          <MenuItem onClick={() => handleDeleteClick(selectedEquipment)} sx={{ color: 'error.main' }}>
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>Delete Equipment</ListItemText>
+          </MenuItem>
+        )}
       </Menu>
 
       {/* Delete Confirmation Dialog */}
