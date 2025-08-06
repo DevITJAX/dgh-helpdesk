@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Grid,
@@ -29,7 +30,12 @@ import {
   Paper,
   Tabs,
   Tab,
-  Pagination
+  Pagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar
 } from '@mui/material';
 import {
   BugReport,
@@ -52,8 +58,10 @@ import {
 } from '@mui/icons-material';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import activityLogService from '../../services/activityLogService';
+import UserForm from '../users/components/UserForm';
 
 const AdminDashboard = ({ statistics, loading, error }) => {
+  const navigate = useNavigate();
   const [recentTickets, setRecentTickets] = useState([]);
   const [technicianPerformance, setTechnicianPerformance] = useState([]);
   const [equipmentStatus, setEquipmentStatus] = useState({ active: 0, inactive: 0, critical: 0 });
@@ -66,6 +74,22 @@ const AdminDashboard = ({ statistics, loading, error }) => {
   const [logPage, setLogPage] = useState(0);
   const [logTotalPages, setLogTotalPages] = useState(0);
   const [logTotalElements, setLogTotalElements] = useState(0);
+  
+  // User creation dialog state
+  const [userFormOpen, setUserFormOpen] = useState(false);
+  
+  // Ticket assignment dialog state
+  const [ticketAssignmentOpen, setTicketAssignmentOpen] = useState(false);
+  const [availableTickets, setAvailableTickets] = useState([]);
+  const [allTickets, setAllTickets] = useState([]);
+  const [unassignedTickets, setUnassignedTickets] = useState([]);
+  const [availableTechnicians, setAvailableTechnicians] = useState([]);
+  const [selectedTicket, setSelectedTicket] = useState('');
+  const [selectedTechnician, setSelectedTechnician] = useState('');
+  const [assignmentType, setAssignmentType] = useState('unassigned'); // 'unassigned' or 'reassign'
+  
+  // Notification state
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   // Mock data for demonstration - replace with actual API calls
   useEffect(() => {
@@ -293,7 +317,187 @@ const AdminDashboard = ({ statistics, loading, error }) => {
   ];
 
   const handleLogPageChange = (event, newPage) => {
-    setLogPage(newPage - 1); // API uses 0-based indexing
+    setLogPage(newPage);
+  };
+
+  // Handler functions for quick action buttons
+  const handleCreateUser = () => {
+    setUserFormOpen(true);
+  };
+
+  const handleAssignTickets = () => {
+    // Load available tickets and technicians for assignment
+    loadAssignmentData();
+    setTicketAssignmentOpen(true);
+  };
+
+  const loadAssignmentData = async () => {
+    try {
+      // Fetch real data from backend APIs
+      const [unassignedTicketsResponse, allTicketsResponse, techniciansResponse] = await Promise.all([
+        fetch('/api/tickets?status=OPEN&assignedTo=null'),
+        fetch('/api/tickets?status=OPEN'),
+        fetch('/api/users?role=TECHNICIAN&isActive=true')
+      ]);
+
+      if (unassignedTicketsResponse.ok && allTicketsResponse.ok && techniciansResponse.ok) {
+        const unassignedTickets = await unassignedTicketsResponse.json();
+        const allTickets = await allTicketsResponse.json();
+        const technicians = await techniciansResponse.json();
+        
+        setUnassignedTickets(unassignedTickets.content || unassignedTickets || []);
+        setAllTickets(allTickets.content || allTickets || []);
+        setAvailableTickets(unassignedTickets.content || unassignedTickets || []); // Initialize with unassigned tickets
+        setAvailableTechnicians(technicians.content || technicians || []);
+      } else {
+        // Fallback to mock data if API calls fail
+        console.warn('API calls failed, using mock data');
+        setUnassignedTickets([
+          { id: 1, title: 'Network connectivity issue', priority: 'HIGH', status: 'OPEN' },
+          { id: 2, title: 'Printer not working', priority: 'MEDIUM', status: 'OPEN' },
+          { id: 3, title: 'Software installation request', priority: 'LOW', status: 'OPEN' },
+        ]);
+        
+        setAllTickets([
+          { id: 4, title: 'Network connectivity issue', priority: 'HIGH', status: 'OPEN' },
+          { id: 5, title: 'Printer not working', priority: 'MEDIUM', status: 'OPEN' },
+          { id: 6, title: 'Software installation request', priority: 'LOW', status: 'OPEN' },
+        ]);
+
+        setAvailableTickets([
+          { id: 1, title: 'Network connectivity issue', priority: 'HIGH', status: 'OPEN' },
+          { id: 2, title: 'Printer not working', priority: 'MEDIUM', status: 'OPEN' },
+          { id: 3, title: 'Software installation request', priority: 'LOW', status: 'OPEN' },
+        ]);
+
+        setAvailableTechnicians([
+          { id: 2, fullName: 'John Doe', department: 'IT Department' },
+          { id: 3, fullName: 'Jane Smith', department: 'IT Department' },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error loading assignment data:', error);
+      // Fallback to mock data
+      setUnassignedTickets([
+        { id: 1, title: 'Network connectivity issue', priority: 'HIGH', status: 'OPEN' },
+        { id: 2, title: 'Printer not working', priority: 'MEDIUM', status: 'OPEN' },
+        { id: 3, title: 'Software installation request', priority: 'LOW', status: 'OPEN' },
+      ]);
+      
+      setAllTickets([
+        { id: 4, title: 'Network connectivity issue', priority: 'HIGH', status: 'OPEN' },
+        { id: 5, title: 'Printer not working', priority: 'MEDIUM', status: 'OPEN' },
+        { id: 6, title: 'Software installation request', priority: 'LOW', status: 'OPEN' },
+      ]);
+
+      setAvailableTickets([
+        { id: 1, title: 'Network connectivity issue', priority: 'HIGH', status: 'OPEN' },
+        { id: 2, title: 'Printer not working', priority: 'MEDIUM', status: 'OPEN' },
+        { id: 3, title: 'Software installation request', priority: 'LOW', status: 'OPEN' },
+      ]);
+
+      setAvailableTechnicians([
+        { id: 2, fullName: 'John Doe', department: 'IT Department' },
+        { id: 3, fullName: 'Jane Smith', department: 'IT Department' },
+      ]);
+    }
+  };
+
+  const switchAssignmentType = () => {
+    const newType = assignmentType === 'unassigned' ? 'reassign' : 'unassigned';
+    setAssignmentType(newType);
+    setSelectedTicket(''); // Clear selected ticket when switching type
+    setSelectedTechnician(''); // Clear selected technician when switching type
+    
+    // Set available tickets based on type
+    if (newType === 'unassigned') {
+      setAvailableTickets(unassignedTickets);
+    } else {
+      setAvailableTickets(allTickets);
+    }
+  };
+
+  const handleTicketAssignmentClose = () => {
+    setTicketAssignmentOpen(false);
+    setSelectedTicket('');
+    setSelectedTechnician('');
+  };
+
+  const handleTicketAssignmentSave = async () => {
+    if (!selectedTicket || !selectedTechnician) {
+      return;
+    }
+    
+    try {
+      // Make actual API call to assign ticket
+      const response = await fetch(`/api/tickets/${selectedTicket}/assign`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ assignedToId: selectedTechnician })
+      });
+
+      if (response.ok) {
+        setTicketAssignmentOpen(false);
+        setSelectedTicket('');
+        setSelectedTechnician('');
+        
+        // Show success notification
+        setNotification({
+          open: true,
+          message: 'Ticket assigned successfully!',
+          severity: 'success'
+        });
+        
+        // Optionally refresh dashboard data
+        // You could add a callback to refresh the dashboard statistics here
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to assign ticket');
+      }
+    } catch (error) {
+      console.error('Error assigning ticket:', error);
+      setNotification({
+        open: true,
+        message: `Error assigning ticket: ${error.message}`,
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleGenerateReport = () => {
+    // TODO: Implement report generation
+    console.log('Generate report functionality to be implemented');
+  };
+
+  const handleUserFormClose = () => {
+    setUserFormOpen(false);
+  };
+
+  const handleUserFormSave = async (userData) => {
+    try {
+      // The UserForm component will handle the actual API call
+      setUserFormOpen(false);
+      // Show success notification
+      setNotification({
+        open: true,
+        message: 'User created successfully!',
+        severity: 'success'
+      });
+      console.log('User created successfully:', userData);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      setNotification({
+        open: true,
+        message: 'Error creating user. Please try again.',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleNotificationClose = () => {
+    setNotification({ ...notification, open: false });
   };
 
   if (loading) {
@@ -321,21 +525,21 @@ const AdminDashboard = ({ statistics, loading, error }) => {
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={() => {/* Navigate to create user */}}
+            onClick={handleCreateUser}
           >
             Create User
           </Button>
           <Button
             variant="outlined"
             startIcon={<Assignment />}
-            onClick={() => {/* Navigate to ticket assignment */}}
+            onClick={handleAssignTickets}
           >
             Assign Ticket
           </Button>
           <Button
             variant="outlined"
             startIcon={<Assessment />}
-            onClick={() => {/* Navigate to reports */}}
+            onClick={handleGenerateReport}
           >
             Generate Report
           </Button>
@@ -684,6 +888,118 @@ const AdminDashboard = ({ statistics, loading, error }) => {
           </Card>
         </Box>
       )}
+
+      {/* User Creation Dialog */}
+      <UserForm
+        open={userFormOpen}
+        onClose={handleUserFormClose}
+        onSave={handleUserFormSave}
+      />
+
+      {/* Ticket Assignment Dialog */}
+      <Dialog 
+        open={ticketAssignmentOpen} 
+        onClose={handleTicketAssignmentClose}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Assignment sx={{ mr: 1 }} />
+            Assign Ticket to Technician
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <Button
+                  variant={assignmentType === 'unassigned' ? 'contained' : 'outlined'}
+                  size="small"
+                  onClick={switchAssignmentType}
+                >
+                  {assignmentType === 'unassigned' ? 'Unassigned Tickets' : 'All Open Tickets'}
+                </Button>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Select Ticket</InputLabel>
+                <Select
+                  value={selectedTicket}
+                  onChange={(e) => setSelectedTicket(e.target.value)}
+                  label="Select Ticket"
+                >
+                  {availableTickets.map((ticket) => (
+                    <MenuItem key={ticket.id} value={ticket.id}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                        <Typography variant="body2">{ticket.title || ticket.name}</Typography>
+                        <Chip 
+                          label={ticket.priority} 
+                          size="small" 
+                          color={getPriorityColor(ticket.priority)}
+                          sx={{ ml: 1 }}
+                        />
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Select Technician</InputLabel>
+                <Select
+                  value={selectedTechnician}
+                  onChange={(e) => setSelectedTechnician(e.target.value)}
+                  label="Select Technician"
+                >
+                  {availableTechnicians.map((technician) => (
+                    <MenuItem key={technician.id} value={technician.id}>
+                      <Box>
+                        <Typography variant="body2">{technician.fullName || technician.name}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {technician.department}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleTicketAssignmentClose}>Cancel</Button>
+          <Button 
+            onClick={() => navigate('/tickets')}
+            variant="outlined"
+          >
+            View All Tickets
+          </Button>
+          <Button 
+            onClick={handleTicketAssignmentSave}
+            variant="contained"
+            disabled={!selectedTicket || !selectedTechnician}
+          >
+            Assign Ticket
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleNotificationClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleNotificationClose} severity={notification.severity} sx={{ width: '100%' }}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

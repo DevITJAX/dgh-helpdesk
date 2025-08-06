@@ -30,6 +30,11 @@ public enum TicketStatus {
     CLOSED("Closed"),
     
     /**
+     * Ticket has been escalated to higher priority
+     */
+    ESCALATED("Escalated"),
+    
+    /**
      * Ticket has been cancelled
      */
     CANCELLED("Cancelled");

@@ -19,14 +19,14 @@ VALUES
 ('pc-finance-01', '192.168.1.100', '00:1B:44:11:3A:C0', 'DESKTOP', 'HP', 'EliteDesk 800', 'Windows 10', 'Finance Department', 'ONLINE', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('pc-hr-01', '192.168.1.101', '00:1B:44:11:3A:C1', 'DESKTOP', 'Dell', 'OptiPlex 7070', 'Windows 10', 'HR Department', 'ONLINE', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
--- Insert sample tickets (using admin user ID 1 for all relationships)
+-- Insert sample tickets (distributed among employees for more realistic data)
 INSERT INTO tickets (title, description, priority, status, category, created_by, assigned_to, equipment_id, created_at, updated_at)
 VALUES 
-('Printer not working', 'The printer in Finance department is not responding to print jobs', 'HIGH', 'OPEN', 'PRINTER', 1, 2, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Slow computer performance', 'My computer is running very slowly, especially when opening applications', 'MEDIUM', 'IN_PROGRESS', 'HARDWARE', 1, 2, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Email access issue', 'Cannot access email from Outlook, getting authentication errors', 'HIGH', 'OPEN', 'EMAIL', 1, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Network connectivity problem', 'Internet connection keeps dropping every few minutes', 'CRITICAL', 'OPEN', 'NETWORK', 1, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Software installation request', 'Need Adobe Acrobat Pro installed on my workstation', 'LOW', 'OPEN', 'REQUEST', 1, 2, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Printer not working', 'The printer in Finance department is not responding to print jobs', 'HIGH', 'OPEN', 'PRINTER', 4, 2, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Slow computer performance', 'My computer is running very slowly, especially when opening applications', 'MEDIUM', 'IN_PROGRESS', 'HARDWARE', 4, 2, 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Email access issue', 'Cannot access email from Outlook, getting authentication errors', 'HIGH', 'OPEN', 'EMAIL', 5, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Network connectivity problem', 'Internet connection keeps dropping every few minutes', 'CRITICAL', 'OPEN', 'NETWORK', 4, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Software installation request', 'Need Adobe Acrobat Pro installed on my workstation', 'LOW', 'OPEN', 'REQUEST', 5, 2, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('Monitor display issue', 'Monitor shows flickering and distorted colors', 'MEDIUM', 'IN_PROGRESS', 'HARDWARE', 4, 2, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('VPN connection problem', 'Cannot connect to VPN from home office', 'HIGH', 'OPEN', 'NETWORK', 5, 3, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('Finance software access', 'Need access to the new accounting software', 'MEDIUM', 'OPEN', 'REQUEST', 4, 2, null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),

@@ -76,7 +76,8 @@ const Tickets = () => {
   const [filters, setFilters] = useState({
     status: '',
     priority: '',
-    assignedTo: ''
+    assignedTo: '',
+    createdBy: ''
   });
   const [formData, setFormData] = useState({
     title: '',
@@ -177,6 +178,7 @@ const Tickets = () => {
     if (filters.status && ticket.status !== filters.status) return false;
     if (filters.priority && ticket.priority !== filters.priority) return false;
     if (filters.assignedTo && ticket.assignedTo?.id !== filters.assignedTo) return false;
+    if (filters.createdBy && ticket.createdBy?.id !== filters.createdBy) return false;
     return true;
   });
 
@@ -184,6 +186,7 @@ const Tickets = () => {
   const filteredUnassignedTickets = (Array.isArray(unassignedTickets) ? unassignedTickets : []).filter(ticket => {
     if (filters.status && ticket.status !== filters.status) return false;
     if (filters.priority && ticket.priority !== filters.priority) return false;
+    if (filters.createdBy && ticket.createdBy?.id !== filters.createdBy) return false;
     return true;
   });
 
@@ -191,14 +194,21 @@ const Tickets = () => {
   const handleDialogOpen = (type, ticket = null) => {
     setDialogType(type);
     setSelectedTicket(ticket);
-    if (ticket && type === 'edit') {
-      setFormData({
-        title: ticket.title,
-        description: ticket.description,
-        priority: ticket.priority,
-        status: ticket.status,
-        assignedTo: ticket.assignedTo?.id || ''
-      });
+    if (ticket) {
+      if (type === 'edit') {
+        setFormData({
+          title: ticket.title,
+          description: ticket.description,
+          priority: ticket.priority,
+          status: ticket.status,
+          assignedTo: ticket.assignedTo?.id || ''
+        });
+      } else if (type === 'assign') {
+        setFormData({
+          ...formData,
+          assignedTo: ticket.assignedTo?.id || ''
+        });
+      }
     }
     setDialogOpen(true);
   };
@@ -372,6 +382,92 @@ const Tickets = () => {
         </Button>
       </Box>
 
+      {/* Filters */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Typography variant="subtitle1" sx={{ mr: 1 }}>
+            <FilterIcon sx={{ mr: 0.5, verticalAlign: 'middle' }} />
+            Filters:
+          </Typography>
+          
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              label="Status"
+            >
+              <MenuItem value="">All Statuses</MenuItem>
+              {statuses.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {STATUS_LABELS[status] || status}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Priority</InputLabel>
+            <Select
+              value={filters.priority}
+              onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+              label="Priority"
+            >
+              <MenuItem value="">All Priorities</MenuItem>
+              {priorities.map((priority) => (
+                <MenuItem key={priority} value={priority}>
+                  {PRIORITY_LABELS[priority] || priority}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {user?.role === 'ADMIN' && (
+            <>
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Assigned To</InputLabel>
+                <Select
+                  value={filters.assignedTo}
+                  onChange={(e) => setFilters({ ...filters, assignedTo: e.target.value })}
+                  label="Assigned To"
+                >
+                  <MenuItem value="">All Assignments</MenuItem>
+                  {users.filter(u => u.role === 'TECHNICIAN').map((user) => (
+                    <MenuItem key={user.id} value={user.id}>
+                      {user.fullName || user.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Created By</InputLabel>
+                <Select
+                  value={filters.createdBy}
+                  onChange={(e) => setFilters({ ...filters, createdBy: e.target.value })}
+                  label="Created By"
+                >
+                  <MenuItem value="">All Creators</MenuItem>
+                  {users.map((user) => (
+                    <MenuItem key={user.id} value={user.id}>
+                      {user.fullName || user.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </>
+          )}
+
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setFilters({ status: '', priority: '', assignedTo: '', createdBy: '' })}
+          >
+            Clear Filters
+          </Button>
+        </Box>
+      </Paper>
+
       {/* Tabs for Technicians */}
       {user?.role === 'TECHNICIAN' && TECHNICIAN_PERMISSIONS.viewUnassignedTickets && (
         <Box sx={{ mb: 3 }}>
@@ -392,6 +488,7 @@ const Tickets = () => {
                 <TableCell>Priority</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Category</TableCell>
+                <TableCell>Created By</TableCell>
                 <TableCell>Assigned To</TableCell>
                 <TableCell>Created</TableCell>
                 <TableCell>Actions</TableCell>
@@ -418,7 +515,8 @@ const Tickets = () => {
                       />
                     </TableCell>
                     <TableCell>{ticket.category}</TableCell>
-                    <TableCell>{ticket.assignedTo?.name || 'Unassigned'}</TableCell>
+                    <TableCell>{ticket.createdBy?.fullName || ticket.createdBy?.name || 'Unknown'}</TableCell>
+                    <TableCell>{ticket.assignedTo?.fullName || ticket.assignedTo?.name || 'Unassigned'}</TableCell>
                     <TableCell>
                       {new Date(ticket.createdAt).toLocaleDateString()}
                     </TableCell>
@@ -475,6 +573,25 @@ const Tickets = () => {
                         {/* Admin actions - can modify any ticket */}
                         {user?.role === 'ADMIN' && (
                           <>
+                            <Tooltip title="Assign Ticket">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDialogOpen('assign', ticket)}
+                              >
+                                <AssignmentIcon />
+                              </IconButton>
+                            </Tooltip>
+                            
+                            <Tooltip title="Delete Ticket">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleDialogOpen('delete', ticket)}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                            
                             {ticket.status === 'CLOSED' && (
                               <Tooltip title="Reopen Ticket">
                                 <IconButton
@@ -522,6 +639,7 @@ const Tickets = () => {
                       />
                     </TableCell>
                     <TableCell>{ticket.category}</TableCell>
+                    <TableCell>{ticket.createdBy?.fullName || ticket.createdBy?.name || 'Unknown'}</TableCell>
                     <TableCell>Unassigned</TableCell>
                     <TableCell>
                       {new Date(ticket.createdAt).toLocaleDateString()}
@@ -697,6 +815,53 @@ const Tickets = () => {
           <Button onClick={handleDialogClose}>Cancel</Button>
           <Button onClick={handleReopenTicket} variant="contained" color="primary">
             Reopen
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Ticket Dialog */}
+      <Dialog open={dialogOpen && dialogType === 'delete'} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Delete Ticket</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete the ticket "{selectedTicket?.title}"? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button onClick={handleDeleteTicket} variant="contained" color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Assign Ticket Dialog */}
+      <Dialog open={dialogOpen && dialogType === 'assign'} onClose={handleDialogClose} maxWidth="md" fullWidth>
+        <DialogTitle>Assign Ticket</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <Typography variant="h6">{selectedTicket?.title}</Typography>
+            <FormControl fullWidth>
+              <InputLabel>Assign to Technician</InputLabel>
+              <Select
+                value={formData.assignedTo}
+                onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                label="Assign to Technician"
+              >
+                <MenuItem value="">Unassigned</MenuItem>
+                {users.filter(u => u.role === 'TECHNICIAN').map((user) => (
+                  <MenuItem key={user.id} value={user.id}>
+                    {user.fullName || user.name} ({user.department})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button onClick={handleAssignTicket} variant="contained">
+            Assign
           </Button>
         </DialogActions>
       </Dialog>

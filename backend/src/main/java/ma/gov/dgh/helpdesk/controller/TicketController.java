@@ -14,8 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * REST Controller for Ticket operations
@@ -37,10 +39,155 @@ public class TicketController {
     }
     
     /**
+     * DTO for ticket responses with user information
+     */
+    public static class TicketDTO {
+        private Long id;
+        private String title;
+        private String description;
+        private TicketPriority priority;
+        private TicketStatus status;
+        private TicketCategory category;
+        private UserDTO createdBy;
+        private UserDTO assignedTo;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+        private LocalDateTime resolvedAt;
+        private LocalDateTime dueDate;
+        private String resolution;
+        private Integer estimatedHours;
+        private Integer actualHours;
+        private Integer customerSatisfaction;
+        private Boolean isEscalated;
+        private String escalationReason;
+        
+        public TicketDTO(Ticket ticket) {
+            this.id = ticket.getId();
+            this.title = ticket.getTitle();
+            this.description = ticket.getDescription();
+            this.priority = ticket.getPriority();
+            this.status = ticket.getStatus();
+            this.category = ticket.getCategory();
+            this.createdBy = ticket.getCreatedBy() != null ? new UserDTO(ticket.getCreatedBy()) : null;
+            this.assignedTo = ticket.getAssignedTo() != null ? new UserDTO(ticket.getAssignedTo()) : null;
+            this.createdAt = ticket.getCreatedAt();
+            this.updatedAt = ticket.getUpdatedAt();
+            this.resolvedAt = ticket.getResolvedAt();
+            this.dueDate = ticket.getDueDate();
+            this.resolution = ticket.getResolution();
+            this.estimatedHours = ticket.getEstimatedHours();
+            this.actualHours = ticket.getActualHours();
+            this.customerSatisfaction = ticket.getCustomerSatisfaction();
+            this.isEscalated = ticket.getIsEscalated();
+            this.escalationReason = ticket.getEscalationReason();
+        }
+        
+        // Getters and setters
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+        
+        public String getTitle() { return title; }
+        public void setTitle(String title) { this.title = title; }
+        
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
+        
+        public TicketPriority getPriority() { return priority; }
+        public void setPriority(TicketPriority priority) { this.priority = priority; }
+        
+        public TicketStatus getStatus() { return status; }
+        public void setStatus(TicketStatus status) { this.status = status; }
+        
+        public TicketCategory getCategory() { return category; }
+        public void setCategory(TicketCategory category) { this.category = category; }
+        
+        public UserDTO getCreatedBy() { return createdBy; }
+        public void setCreatedBy(UserDTO createdBy) { this.createdBy = createdBy; }
+        
+        public UserDTO getAssignedTo() { return assignedTo; }
+        public void setAssignedTo(UserDTO assignedTo) { this.assignedTo = assignedTo; }
+        
+        public LocalDateTime getCreatedAt() { return createdAt; }
+        public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+        
+        public LocalDateTime getUpdatedAt() { return updatedAt; }
+        public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+        
+        public LocalDateTime getResolvedAt() { return resolvedAt; }
+        public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
+        
+        public LocalDateTime getDueDate() { return dueDate; }
+        public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+        
+        public String getResolution() { return resolution; }
+        public void setResolution(String resolution) { this.resolution = resolution; }
+        
+        public Integer getEstimatedHours() { return estimatedHours; }
+        public void setEstimatedHours(Integer estimatedHours) { this.estimatedHours = estimatedHours; }
+        
+        public Integer getActualHours() { return actualHours; }
+        public void setActualHours(Integer actualHours) { this.actualHours = actualHours; }
+        
+        public Integer getCustomerSatisfaction() { return customerSatisfaction; }
+        public void setCustomerSatisfaction(Integer customerSatisfaction) { this.customerSatisfaction = customerSatisfaction; }
+        
+        public Boolean getIsEscalated() { return isEscalated; }
+        public void setIsEscalated(Boolean isEscalated) { this.isEscalated = isEscalated; }
+        
+        public String getEscalationReason() { return escalationReason; }
+        public void setEscalationReason(String escalationReason) { this.escalationReason = escalationReason; }
+    }
+    
+    /**
+     * DTO for user information in ticket responses
+     */
+    public static class UserDTO {
+        private Long id;
+        private String ldapUsername;
+        private String email;
+        private String fullName;
+        private String department;
+        private UserRole role;
+        private Boolean isActive;
+        
+        public UserDTO(User user) {
+            this.id = user.getId();
+            this.ldapUsername = user.getLdapUsername();
+            this.email = user.getEmail();
+            this.fullName = user.getFullName();
+            this.department = user.getDepartment();
+            this.role = user.getRole();
+            this.isActive = user.getIsActive();
+        }
+        
+        // Getters and setters
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+        
+        public String getLdapUsername() { return ldapUsername; }
+        public void setLdapUsername(String ldapUsername) { this.ldapUsername = ldapUsername; }
+        
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        
+        public String getFullName() { return fullName; }
+        public void setFullName(String fullName) { this.fullName = fullName; }
+        
+        public String getDepartment() { return department; }
+        public void setDepartment(String department) { this.department = department; }
+        
+        public UserRole getRole() { return role; }
+        public void setRole(UserRole role) { this.role = role; }
+        
+        public Boolean getIsActive() { return isActive; }
+        public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    }
+    
+    /**
      * Get all tickets with pagination and filtering
      */
     @GetMapping
-    public ResponseEntity<Page<Ticket>> getAllTickets(
+    public ResponseEntity<Page<TicketDTO>> getAllTickets(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -62,16 +209,20 @@ public class TicketController {
         
         Page<Ticket> tickets = ticketService.findTicketsWithFilters(
             search, status, priority, category, createdBy, assignedTo, equipmentId, pageable);
-        return ResponseEntity.ok(tickets);
+        
+        // Convert to DTOs
+        Page<TicketDTO> ticketDTOs = tickets.map(TicketDTO::new);
+        
+        return ResponseEntity.ok(ticketDTOs);
     }
     
     /**
      * Get ticket by ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Ticket> getTicketById(@PathVariable Long id) {
+    public ResponseEntity<TicketDTO> getTicketById(@PathVariable Long id) {
         Optional<Ticket> ticket = ticketService.findById(id);
-        return ticket.map(ResponseEntity::ok)
+        return ticket.map(t -> ResponseEntity.ok(new TicketDTO(t)))
                     .orElse(ResponseEntity.notFound().build());
     }
     
@@ -79,122 +230,156 @@ public class TicketController {
      * Get tickets by status
      */
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Ticket>> getTicketsByStatus(@PathVariable TicketStatus status) {
+    public ResponseEntity<List<TicketDTO>> getTicketsByStatus(@PathVariable TicketStatus status) {
         List<Ticket> tickets = ticketService.findByStatus(status);
-        return ResponseEntity.ok(tickets);
+        List<TicketDTO> ticketDTOs = tickets.stream()
+            .map(TicketDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(ticketDTOs);
     }
     
     /**
      * Get tickets by priority
      */
     @GetMapping("/priority/{priority}")
-    public ResponseEntity<List<Ticket>> getTicketsByPriority(@PathVariable TicketPriority priority) {
+    public ResponseEntity<List<TicketDTO>> getTicketsByPriority(@PathVariable TicketPriority priority) {
         List<Ticket> tickets = ticketService.findByPriority(priority);
-        return ResponseEntity.ok(tickets);
+        List<TicketDTO> ticketDTOs = tickets.stream()
+            .map(TicketDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(ticketDTOs);
     }
     
     /**
      * Get tickets by category
      */
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<Ticket>> getTicketsByCategory(@PathVariable TicketCategory category) {
+    public ResponseEntity<List<TicketDTO>> getTicketsByCategory(@PathVariable TicketCategory category) {
         List<Ticket> tickets = ticketService.findByCategory(category);
-        return ResponseEntity.ok(tickets);
+        List<TicketDTO> ticketDTOs = tickets.stream()
+            .map(TicketDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(ticketDTOs);
     }
     
     /**
      * Get tickets created by user
      */
     @GetMapping("/created-by/{userId}")
-    public ResponseEntity<List<Ticket>> getTicketsCreatedByUser(@PathVariable Long userId) {
+    public ResponseEntity<List<TicketDTO>> getTicketsCreatedByUser(@PathVariable Long userId) {
         Optional<User> user = userService.findById(userId);
         if (user.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         List<Ticket> tickets = ticketService.findByCreatedBy(user.get());
-        return ResponseEntity.ok(tickets);
+        List<TicketDTO> ticketDTOs = tickets.stream()
+            .map(TicketDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(ticketDTOs);
     }
     
     /**
      * Get tickets assigned to user
      */
     @GetMapping("/assigned-to/{userId}")
-    public ResponseEntity<List<Ticket>> getTicketsAssignedToUser(@PathVariable Long userId) {
+    public ResponseEntity<List<TicketDTO>> getTicketsAssignedToUser(@PathVariable Long userId) {
         Optional<User> user = userService.findById(userId);
         if (user.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         List<Ticket> tickets = ticketService.findByAssignedTo(user.get());
-        return ResponseEntity.ok(tickets);
+        List<TicketDTO> ticketDTOs = tickets.stream()
+            .map(TicketDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(ticketDTOs);
     }
     
     /**
      * Get unassigned tickets
      */
     @GetMapping("/unassigned")
-    public ResponseEntity<List<Ticket>> getUnassignedTickets() {
+    public ResponseEntity<List<TicketDTO>> getUnassignedTickets() {
         List<Ticket> tickets = ticketService.findUnassignedTickets();
-        return ResponseEntity.ok(tickets);
+        List<TicketDTO> ticketDTOs = tickets.stream()
+            .map(TicketDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(ticketDTOs);
     }
     
     /**
      * Get open tickets
      */
     @GetMapping("/open")
-    public ResponseEntity<List<Ticket>> getOpenTickets() {
+    public ResponseEntity<List<TicketDTO>> getOpenTickets() {
         List<Ticket> tickets = ticketService.findOpenTickets();
-        return ResponseEntity.ok(tickets);
+        List<TicketDTO> ticketDTOs = tickets.stream()
+            .map(TicketDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(ticketDTOs);
     }
     
     /**
      * Get overdue tickets
      */
     @GetMapping("/overdue")
-    public ResponseEntity<List<Ticket>> getOverdueTickets() {
+    public ResponseEntity<List<TicketDTO>> getOverdueTickets() {
         List<Ticket> tickets = ticketService.findOverdueTickets();
-        return ResponseEntity.ok(tickets);
+        List<TicketDTO> ticketDTOs = tickets.stream()
+            .map(TicketDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(ticketDTOs);
     }
     
     /**
      * Get escalated tickets
      */
     @GetMapping("/escalated")
-    public ResponseEntity<List<Ticket>> getEscalatedTickets() {
+    public ResponseEntity<List<TicketDTO>> getEscalatedTickets() {
         List<Ticket> tickets = ticketService.findEscalatedTickets();
-        return ResponseEntity.ok(tickets);
+        List<TicketDTO> ticketDTOs = tickets.stream()
+            .map(TicketDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(ticketDTOs);
     }
     
     /**
      * Get critical open tickets
      */
     @GetMapping("/critical")
-    public ResponseEntity<List<Ticket>> getCriticalOpenTickets() {
+    public ResponseEntity<List<TicketDTO>> getCriticalOpenTickets() {
         List<Ticket> tickets = ticketService.findCriticalOpenTickets();
-        return ResponseEntity.ok(tickets);
+        List<TicketDTO> ticketDTOs = tickets.stream()
+            .map(TicketDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(ticketDTOs);
     }
     
     /**
      * Create a new ticket
      */
     @PostMapping
-    public ResponseEntity<Ticket> createTicket(@Valid @RequestBody TicketCreateRequest request) {
+    public ResponseEntity<TicketDTO> createTicket(@Valid @RequestBody TicketCreateRequest request) {
         try {
-            Optional<User> createdBy = userService.findById(request.getCreatedById());
-            if (createdBy.isEmpty()) {
-                return ResponseEntity.badRequest().build();
+            User createdBy = userService.findById(request.getCreatedById())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            Equipment equipment = null;
+            if (request.getEquipmentId() != null) {
+                // You would need to inject EquipmentService here if you have one
+                // equipment = equipmentService.findById(request.getEquipmentId()).orElse(null);
             }
             
-            Ticket ticket = new Ticket(request.getTitle(), request.getDescription(), createdBy.get());
+            Ticket ticket = new Ticket();
+            ticket.setTitle(request.getTitle());
+            ticket.setDescription(request.getDescription());
             ticket.setPriority(request.getPriority());
             ticket.setCategory(request.getCategory());
+            ticket.setCreatedBy(createdBy);
+            ticket.setEquipment(equipment);
             
-            if (request.getEquipmentId() != null) {
-                // Equipment will be set by service if needed
-            }
-            
-            Ticket createdTicket = ticketService.createTicket(ticket);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdTicket);
-        } catch (IllegalArgumentException e) {
+            Ticket savedTicket = ticketService.createTicket(ticket);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new TicketDTO(savedTicket));
+        } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
@@ -203,74 +388,75 @@ public class TicketController {
      * Update an existing ticket
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Ticket> updateTicket(@PathVariable Long id, @Valid @RequestBody TicketUpdateRequest request) {
-        try {
-            Optional<Ticket> existingTicket = ticketService.findById(id);
-            if (existingTicket.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-            
-            Ticket ticket = existingTicket.get();
-            ticket.setTitle(request.getTitle());
-            ticket.setDescription(request.getDescription());
-            ticket.setPriority(request.getPriority());
-            ticket.setCategory(request.getCategory());
-            ticket.setStatus(request.getStatus());
-            
-            if (request.getAssignedToId() != null) {
-                Optional<User> assignedTo = userService.findById(request.getAssignedToId());
-                ticket.setAssignedTo(assignedTo.orElse(null));
-            }
-            
-            Ticket updatedTicket = ticketService.updateTicket(ticket);
-            return ResponseEntity.ok(updatedTicket);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<TicketDTO> updateTicket(@PathVariable Long id, @Valid @RequestBody TicketUpdateRequest request) {
+        Optional<Ticket> existingTicket = ticketService.findById(id);
+        if (existingTicket.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
+        
+        Ticket ticket = existingTicket.get();
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        ticket.setPriority(request.getPriority());
+        ticket.setCategory(request.getCategory());
+        ticket.setStatus(request.getStatus());
+        
+        if (request.getAssignedToId() != null) {
+            Optional<User> assignedTo = userService.findById(request.getAssignedToId());
+            assignedTo.ifPresent(ticket::setAssignedTo);
+        } else {
+            ticket.setAssignedTo(null);
+        }
+        
+        Ticket updatedTicket = ticketService.updateTicket(ticket);
+        return ResponseEntity.ok(new TicketDTO(updatedTicket));
     }
     
     /**
-     * Assign ticket to user
+     * Assign ticket to a user
      */
     @PutMapping("/{id}/assign")
-    public ResponseEntity<Ticket> assignTicket(@PathVariable Long id, @RequestBody AssignTicketRequest request) {
-        try {
-            Optional<User> assignedTo = userService.findById(request.getAssignedToId());
-            if (assignedTo.isEmpty()) {
-                return ResponseEntity.badRequest().build();
-            }
-            
-            Ticket ticket = ticketService.assignTicket(id, assignedTo.get());
-            return ResponseEntity.ok(ticket);
-        } catch (IllegalArgumentException e) {
+    public ResponseEntity<TicketDTO> assignTicket(@PathVariable Long id, @RequestBody AssignTicketRequest request) {
+        Optional<Ticket> ticket = ticketService.findById(id);
+        if (ticket.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+        
+        Optional<User> assignedTo = userService.findById(request.getAssignedToId());
+        if (assignedTo.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        Ticket updatedTicket = ticketService.assignTicket(id, assignedTo.get());
+        return ResponseEntity.ok(new TicketDTO(updatedTicket));
     }
     
     /**
      * Change ticket status
      */
     @PutMapping("/{id}/status")
-    public ResponseEntity<Ticket> changeTicketStatus(@PathVariable Long id, @RequestBody StatusChangeRequest request) {
-        try {
-            Ticket ticket = ticketService.changeStatus(id, request.getStatus(), request.getComment());
-            return ResponseEntity.ok(ticket);
-        } catch (IllegalArgumentException e) {
+    public ResponseEntity<TicketDTO> changeTicketStatus(@PathVariable Long id, @RequestBody StatusChangeRequest request) {
+        Optional<Ticket> ticket = ticketService.findById(id);
+        if (ticket.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+        
+        Ticket updatedTicket = ticketService.changeStatus(id, request.getStatus(), request.getComment());
+        return ResponseEntity.ok(new TicketDTO(updatedTicket));
     }
     
     /**
      * Escalate ticket
      */
     @PutMapping("/{id}/escalate")
-    public ResponseEntity<Ticket> escalateTicket(@PathVariable Long id, @RequestBody EscalateTicketRequest request) {
-        try {
-            Ticket ticket = ticketService.escalateTicket(id, request.getReason());
-            return ResponseEntity.ok(ticket);
-        } catch (IllegalArgumentException e) {
+    public ResponseEntity<TicketDTO> escalateTicket(@PathVariable Long id, @RequestBody EscalateTicketRequest request) {
+        Optional<Ticket> ticket = ticketService.findById(id);
+        if (ticket.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+        
+        Ticket updatedTicket = ticketService.escalateTicket(id, request.getReason());
+        return ResponseEntity.ok(new TicketDTO(updatedTicket));
     }
     
     /**
@@ -470,4 +656,4 @@ public class TicketController {
                 .body("Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
         }
     }
-}
+} 

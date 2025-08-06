@@ -19,6 +19,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ma.gov.dgh.helpdesk.dto.UserAdminDto;
+import ma.gov.dgh.helpdesk.dto.UserSimpleDto;
+import java.util.stream.Collectors;
 
 /**
  * REST Controller for User operations
@@ -39,7 +41,7 @@ public class UserController {
      * Get all users with pagination and filtering
      */
     @GetMapping
-    public ResponseEntity<Page<User>> getAllUsers(
+    public ResponseEntity<Page<UserSimpleDto>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -54,7 +56,8 @@ public class UserController {
         Pageable pageable = PageRequest.of(page, size, sort);
         
         Page<User> users = userService.findUsersWithFilters(search, department, role, isActive, pageable);
-        return ResponseEntity.ok(users);
+        Page<UserSimpleDto> userDtos = users.map(UserSimpleDto::new);
+        return ResponseEntity.ok(userDtos);
     }
     
     /**
@@ -91,27 +94,36 @@ public class UserController {
      * Get all active users
      */
     @GetMapping("/active")
-    public ResponseEntity<List<User>> getActiveUsers() {
+    public ResponseEntity<List<UserSimpleDto>> getActiveUsers() {
         List<User> users = userService.findActiveUsers();
-        return ResponseEntity.ok(users);
+        List<UserSimpleDto> userDtos = users.stream()
+            .map(UserSimpleDto::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(userDtos);
     }
     
     /**
      * Get users by role
      */
     @GetMapping("/role/{role}")
-    public ResponseEntity<List<User>> getUsersByRole(@PathVariable UserRole role) {
+    public ResponseEntity<List<UserSimpleDto>> getUsersByRole(@PathVariable UserRole role) {
         List<User> users = userService.findByRole(role);
-        return ResponseEntity.ok(users);
+        List<UserSimpleDto> userDtos = users.stream()
+            .map(UserSimpleDto::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(userDtos);
     }
     
     /**
-     * Get all technicians
+     * Get all technicians (users with TECHNICIAN or ADMIN role)
      */
     @GetMapping("/technicians")
-    public ResponseEntity<List<User>> getTechnicians() {
+    public ResponseEntity<List<UserSimpleDto>> getTechnicians() {
         List<User> technicians = userService.findAllTechnicians();
-        return ResponseEntity.ok(technicians);
+        List<UserSimpleDto> technicianDtos = technicians.stream()
+            .map(UserSimpleDto::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(technicianDtos);
     }
     
     /**
