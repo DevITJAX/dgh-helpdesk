@@ -15,12 +15,14 @@ import {
   CircularProgress
 } from '@mui/material';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
+import { useAuth } from '../../contexts/AuthContext';
 import { userService } from '../../services/userService';
 
 const DatabaseViewer = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { isAuthenticated, user } = useAuth();
 
   const loadUsers = async () => {
     try {
@@ -38,8 +40,16 @@ const DatabaseViewer = () => {
   };
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    // Only load users if user is authenticated
+    if (isAuthenticated && user) {
+      loadUsers();
+    }
+  }, [isAuthenticated, user]);
+
+  // Don't render if not authenticated
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
   const getRoleColor = (role) => {
     switch (role) {

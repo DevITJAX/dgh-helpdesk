@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { userService } from '../../services/userService';
+import PageLayout from '../../components/common/PageLayout';
 
 const Profile = () => {
   const { user, isAuthenticated, updateUser } = useAuth();
@@ -127,69 +128,59 @@ const Profile = () => {
 
   if (!isAuthenticated) {
     return (
-      <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Alert severity="warning">
-          Please log in to view your profile.
-        </Alert>
-      </Container>
+      <PageLayout
+        title="User Profile"
+        error="Please log in to view your profile."
+      >
+        <Box />
+      </PageLayout>
     );
   }
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        User Profile
-      </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      )}
-
+    <PageLayout
+      title="User Profile"
+      loading={loading}
+      error={error}
+      success={success}
+      actions={
+        !isEditing ? (
+          <Button
+            startIcon={<EditIcon />}
+            onClick={handleEdit}
+            variant="outlined"
+          >
+            Edit Profile
+          </Button>
+        ) : (
+          <Box>
+            <Button
+              startIcon={<CancelIcon />}
+              onClick={handleCancel}
+              variant="outlined"
+              sx={{ mr: 1 }}
+            >
+              Cancel
+            </Button>
+            <Button
+              startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
+              onClick={handleSave}
+              variant="contained"
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </Box>
+        )
+      }
+    >
       <Grid container spacing={3}>
         {/* User Information Card */}
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-              <Typography variant="h6">
-                Personal Information
-              </Typography>
-              {!isEditing ? (
-                <Button
-                  startIcon={<EditIcon />}
-                  onClick={handleEdit}
-                  variant="outlined"
-                >
-                  Edit Profile
-                </Button>
-              ) : (
-                <Box>
-                  <Button
-                    startIcon={<CancelIcon />}
-                    onClick={handleCancel}
-                    variant="outlined"
-                    sx={{ mr: 1 }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
-                    onClick={handleSave}
-                    variant="contained"
-                    disabled={saving}
-                  >
-                    {saving ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                </Box>
-              )}
-            </Box>
+            <Typography variant="h6" mb={3}>
+              Personal Information
+            </Typography>
 
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
@@ -308,7 +299,7 @@ const Profile = () => {
           </Card>
         </Grid>
       </Grid>
-    </Container>
+    </PageLayout>
   );
 };
 

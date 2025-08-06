@@ -9,25 +9,27 @@ import {
   Alert,
   CircularProgress,
   Container,
-  Avatar
+  Avatar,
+  Divider
 } from '@mui/material';
 import { LockOutlined } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useSecureAuth } from '../hooks/useSecureAuth';
 import dghLogo from '../dgh_logo.png';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    username: 'admin',
-    password: 'admin123'
+    username: '',
+    password: ''
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [globalError, setGlobalError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState('');
   
-  const { login, isAuthenticated, error, clearError } = useAuth();
+  const { secureLogin, isAuthenticated, error, clearError } = useSecureAuth();
   const navigate = useNavigate();
 
-  // Redirect if already authenticated - REMOVED DOUBLE NAVIGATION
+  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard', { replace: true });
@@ -83,29 +85,28 @@ const Login = () => {
   };
 
   const performLogin = async () => {
-    console.log('performLogin called with:', formData);
-    
     if (!validateForm()) {
-      console.log('Form validation failed');
       return;
     }
 
     setIsSubmitting(true);
     setGlobalError(null);
+    setDebugInfo('Attempting login...');
 
     try {
-      console.log('Calling login function...');
-      const result = await login(formData.username, formData.password);
+      console.log('Login attempt with:', { username: formData.username, password: formData.password });
+      
+      const result = await secureLogin(formData.username, formData.password);
+      
       console.log('Login result:', result);
+      setDebugInfo(`Login result: ${JSON.stringify(result, null, 2)}`);
       
       if (!result.success) {
         setGlobalError(result.error || 'Login failed. Please try again.');
-        console.log('Login failed:', result.error);
-      } else {
-        console.log('Login successful, should redirect to dashboard');
       }
     } catch (error) {
       console.error('Login error:', error);
+      setDebugInfo(`Login error: ${error.message}`);
       
       // Better error handling for different scenarios
       if (error.message?.includes('Network Error') || error.code === 'ERR_NETWORK') {
@@ -123,20 +124,42 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log('handleSubmit called');
     e.preventDefault();
     e.stopPropagation();
-    console.log('Form submission prevented');
-    
     await performLogin();
   };
 
   const handleButtonClick = async (e) => {
-    console.log('Button clicked');
     e.preventDefault();
     e.stopPropagation();
-    
     await performLogin();
+  };
+
+  // Test login with correct credentials
+  const testLogin = async (username, password) => {
+    setFormData({ username, password });
+    setDebugInfo(`Testing login with: ${username}`);
+    
+    // Wait a moment for state to update
+    setTimeout(async () => {
+      setIsSubmitting(true);
+      setGlobalError(null);
+      
+      try {
+        const result = await secureLogin(username, password);
+        setDebugInfo(`Test login result: ${JSON.stringify(result, null, 2)}`);
+        
+        if (!result.success) {
+          setGlobalError(result.error || 'Test login failed.');
+        }
+      } catch (error) {
+        console.error('Test login error:', error);
+        setDebugInfo(`Test login error: ${error.message}`);
+        setGlobalError(error.message || 'Test login failed.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    }, 100);
   };
 
   return (
@@ -274,7 +297,8 @@ const Login = () => {
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
                 borderRadius: 2,
-                boxShadow: 3
+                boxShadow: 3,
+                mb: 2
               }}
               disabled={isSubmitting}
               onClick={handleButtonClick}
@@ -285,7 +309,29 @@ const Login = () => {
                 'Sign In'
               )}
             </Button>
+
+            {/* Copyright Text */}
+            <Typography 
+              variant="caption" 
+              color="text.secondary" 
+              sx={{ 
+                mt: 3,
+                textAlign: 'center',
+                display: 'block'
+              }}
+            >
+              © 2025 Direction Générale de l'Hydraulique - Rabat, Morocco
+            </Typography>
           </Box>
+
+          {/* Debug Information */}
+          {process.env.NODE_ENV === 'development' && debugInfo && (
+            <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1, width: '100%' }}>
+              <Typography variant="caption" component="pre" sx={{ fontSize: '0.7rem', whiteSpace: 'pre-wrap' }}>
+                {debugInfo}
+              </Typography>
+            </Box>
+          )}
         </Paper>
       </Container>
     </Box>

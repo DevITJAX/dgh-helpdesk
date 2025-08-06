@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -11,7 +12,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
   Chip,
   IconButton,
   Dialog,
@@ -59,9 +59,14 @@ import {
   PRIORITY_LABELS,
   STATUS_LABELS
 } from '../../constants/ticketConstants';
+import EnhancedPagination from '../../components/common/EnhancedPagination';
+import EnhancedFilters from '../../components/common/EnhancedFilters';
+import PageLayout from '../../components/common/PageLayout';
 
 const Tickets = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tickets, setTickets] = useState([]);
+  const [allTickets, setAllTickets] = useState([]); // All tickets for technicians
   const [unassignedTickets, setUnassignedTickets] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,12 +77,13 @@ const Tickets = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState(''); // 'view', 'edit', 'assign', 'delete', 'escalate', 'reopen'
   const [createFormOpen, setCreateFormOpen] = useState(false);
-  const [tabValue, setTabValue] = useState(0); // 0: Assigned, 1: Unassigned
+  const [tabValue, setTabValue] = useState(0); // 0: Technician Assigned Tickets, 1: All Tickets
   const [filters, setFilters] = useState({
     status: '',
     priority: '',
     assignedTo: '',
-    createdBy: ''
+    createdBy: '',
+    search: '' // Added search parameter
   });
   const [formData, setFormData] = useState({
     title: '',
@@ -111,19 +117,50 @@ const Tickets = () => {
     return STATUS_COLORS[status] || 'default';
   };
 
+  // Initialize filters from URL parameters
+  useEffect(() => {
+    const urlAssignedTo = searchParams.get('assignedTo');
+    const urlStatus = searchParams.get('status');
+    const urlPriority = searchParams.get('priority');
+    const urlCreatedBy = searchParams.get('createdBy');
+    const urlSearch = searchParams.get('search'); // Get search parameter
+    
+    if (urlAssignedTo || urlStatus || urlPriority || urlCreatedBy || urlSearch) {
+      setFilters({
+        status: urlStatus || '',
+        priority: urlPriority || '',
+        assignedTo: urlAssignedTo || '',
+        createdBy: urlCreatedBy || '',
+        search: urlSearch || '' // Initialize search parameter
+      });
+    }
+  }, [searchParams]);
+
   // Load tickets and users
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         
+        // Debug: Log user object to see its structure
+        console.log('Tickets component - Current user object:', user);
+        console.log('Tickets component - User ID:', user?.userId || user?.id);
+        
         // Determine what tickets to fetch based on user role
         let ticketsData;
+        let allTicketsData;
+        
         if (user?.role === 'TECHNICIAN') {
-          // Technicians see ONLY their assigned tickets
-          ticketsData = await ticketService.getTechnicianTickets(user.id);
+          // Technicians see their assigned tickets for tab 0
+          // Use userId (from backend) or fallback to id
+          const technicianId = user?.userId || user?.id;
+          console.log('Tickets component - Fetching tickets for technician ID:', technicianId);
+          ticketsData = await ticketService.getTechnicianTickets(technicianId);
           
-          // Also load unassigned tickets if permission allows
+          // Also load all tickets for tab 1 (All Tickets)
+          allTicketsData = await ticketService.getTickets();
+          
+          // Also load unassigned tickets if permission allows (for backward compatibility)
           if (TECHNICIAN_PERMISSIONS.viewUnassignedTickets) {
             const unassignedData = await ticketService.getUnassignedTicketsWithFilters();
             setUnassignedTickets(Array.isArray(unassignedData) ? unassignedData : 
@@ -132,9 +169,12 @@ const Tickets = () => {
         } else if (user?.role === 'ADMIN') {
           // Admins see all tickets
           ticketsData = await ticketService.getTickets();
+          allTicketsData = ticketsData; // Same data for admins
         } else {
           // Employees see only their own tickets
-          ticketsData = await ticketService.getTickets({ createdBy: user.id });
+          const employeeId = user?.userId || user?.id;
+          ticketsData = await ticketService.getTickets({ createdBy: employeeId });
+          allTicketsData = ticketsData; // Same data for employees
         }
         
         // Only load users for admins (for assignment purposes)
@@ -148,6 +188,7 @@ const Tickets = () => {
         
         // Debug logging
         console.log('Tickets component - ticketsData:', ticketsData);
+        console.log('Tickets component - allTicketsData:', allTicketsData);
         console.log('Tickets component - ticketsData type:', typeof ticketsData);
         console.log('Tickets component - ticketsData is array:', Array.isArray(ticketsData));
         
@@ -156,13 +197,21 @@ const Tickets = () => {
                            (ticketsData?.content ? ticketsData.content : 
                            (ticketsData?.data ? ticketsData.data : []));
         
+        // Ensure allTicketsData is an array
+        const allTicketsArray = Array.isArray(allTicketsData) ? allTicketsData : 
+                              (allTicketsData?.content ? allTicketsData.content : 
+                              (allTicketsData?.data ? allTicketsData.data : []));
+        
         console.log('Tickets component - ticketsArray:', ticketsArray);
+        console.log('Tickets component - allTicketsArray:', allTicketsArray);
         
         setTickets(ticketsArray);
+        setAllTickets(allTicketsArray);
       } catch (err) {
         setError('Failed to load tickets data');
         console.error('Error loading data:', err);
         setTickets([]);
+        setAllTickets([]);
         setUsers([]);
       } finally {
         setLoading(false);
@@ -180,20 +229,35 @@ const Tickets = () => {
     if (filters.priority && ticket.priority !== filters.priority) return false;
     if (filters.assignedTo && ticket.assignedTo?.id !== filters.assignedTo) return false;
     if (filters.createdBy && ticket.createdBy?.id !== filters.createdBy) return false;
+    if (filters.search && 
+        !ticket.title.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !ticket.description.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !ticket.category.toLowerCase().includes(filters.search.toLowerCase())) {
+      return false;
+    }
     return true;
   });
 
-  // Filter unassigned tickets
-  const filteredUnassignedTickets = (Array.isArray(unassignedTickets) ? unassignedTickets : []).filter(ticket => {
+  // Filter all tickets (for the "All Tickets" tab)
+  const filteredAllTickets = (Array.isArray(allTickets) ? allTickets : []).filter(ticket => {
     if (filters.status && ticket.status !== filters.status) return false;
     if (filters.priority && ticket.priority !== filters.priority) return false;
+    if (filters.assignedTo && ticket.assignedTo?.id !== filters.assignedTo) return false;
     if (filters.createdBy && ticket.createdBy?.id !== filters.createdBy) return false;
+    if (filters.search && 
+        !ticket.title.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !ticket.description.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !ticket.category.toLowerCase().includes(filters.search.toLowerCase())) {
+      return false;
+    }
     return true;
   });
 
   // Determine which tickets to show based on tab
+  // Tab 0: Technician Assigned Tickets (only tickets assigned to current technician)
+  // Tab 1: All Tickets (all tickets in the system)
   const isAssignedTab = (tabValue === 0 || user?.role !== 'TECHNICIAN');
-  const currentTickets = isAssignedTab ? filteredTickets : filteredUnassignedTickets;
+  const currentTickets = isAssignedTab ? filteredTickets : filteredAllTickets;
 
   // Handle dialog operations
   const handleDialogOpen = (type, ticket = null) => {
@@ -258,7 +322,8 @@ const Tickets = () => {
   // NEW: Self-assignment for technicians
   const handleSelfAssign = async (ticketId) => {
     try {
-      const assignedTicket = await ticketService.assignTicketToSelf(ticketId, user.id);
+      const technicianId = user?.userId || user?.id;
+      const assignedTicket = await ticketService.assignTicketToSelf(ticketId, technicianId);
       setTickets(prev => [...prev, assignedTicket]);
       setUnassignedTickets(prev => prev.filter(t => t.id !== ticketId));
     } catch (err) {
@@ -311,26 +376,130 @@ const Tickets = () => {
     setTabValue(newValue);
   };
 
+  // Filter configuration for EnhancedFilters
+  const filterConfigs = [
+    {
+      field: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: '', label: 'All Statuses' },
+        ...statuses.map(status => ({ 
+          value: status, 
+          label: STATUS_LABELS[status] || status 
+        }))
+      ]
+    },
+    {
+      field: 'priority',
+      label: 'Priority',
+      type: 'select',
+      options: [
+        { value: '', label: 'All Priorities' },
+        ...priorities.map(priority => ({ 
+          value: priority, 
+          label: PRIORITY_LABELS[priority] || priority 
+        }))
+      ]
+    },
+    ...(user?.role === 'ADMIN' ? [
+      {
+        field: 'assignedTo',
+        label: 'Assigned To',
+        type: 'select',
+        options: [
+          { value: '', label: 'All Assignments' },
+          ...users.filter(u => u.role === 'TECHNICIAN').map(user => ({ 
+            value: user.id, 
+            label: user.fullName || user.name 
+          }))
+        ]
+      },
+      {
+        field: 'createdBy',
+        label: 'Created By',
+        type: 'select',
+        options: [
+          { value: '', label: 'All Creators' },
+          ...users.map(user => ({ 
+            value: user.id, 
+            label: user.fullName || user.name 
+          }))
+        ]
+      }
+    ] : user?.role === 'TECHNICIAN' ? [
+      {
+        field: 'assignedTo',
+        label: 'Assigned To',
+        type: 'select',
+        options: [
+          { value: '', label: 'All Assignments' },
+          { value: user?.userId || user?.id, label: 'My Tickets' }
+        ]
+      }
+    ] : [])
+  ];
+
+  // Handle filter changes
+  const handleFiltersChange = (newFilters) => {
+    setFilters(newFilters);
+    setPage(0); // Reset to first page when filters change
+    
+    // Update URL parameters to reflect current filters
+    const newSearchParams = new URLSearchParams();
+    if (newFilters.status) newSearchParams.set('status', newFilters.status);
+    if (newFilters.priority) newSearchParams.set('priority', newFilters.priority);
+    if (newFilters.assignedTo) newSearchParams.set('assignedTo', newFilters.assignedTo);
+    if (newFilters.createdBy) newSearchParams.set('createdBy', newFilters.createdBy);
+    if (newFilters.search) newSearchParams.set('search', newFilters.search);
+    
+    setSearchParams(newSearchParams);
+  };
+
   // Update fetch logic to always use backend pagination
   useEffect(() => {
     const fetchTickets = async () => {
       setLoading(true);
-      let params = { page, size: rowsPerPage };
+      let params = { 
+        page, 
+        size: rowsPerPage,
+        // Include all filters in the API call
+        ...(filters.status && { status: filters.status }),
+        ...(filters.priority && { priority: filters.priority }),
+        ...(filters.assignedTo && { assignedToId: filters.assignedTo }),
+        ...(filters.createdBy && { createdById: filters.createdBy }),
+        ...(filters.search && { search: filters.search })
+      };
+      
       let ticketsData;
+      let allTicketsData;
+      
       if (user?.role === 'TECHNICIAN') {
-        ticketsData = await ticketService.getTechnicianTickets(user.id, params);
+        // For technicians, always fetch both assigned and all tickets
+        const technicianId = user?.userId || user?.id;
+        ticketsData = await ticketService.getTechnicianTickets(technicianId, params);
+        allTicketsData = await ticketService.getTickets(params);
+        
+        // Keep unassigned tickets for backward compatibility
         if (TECHNICIAN_PERMISSIONS.viewUnassignedTickets) {
           const unassignedData = await ticketService.getUnassignedTicketsWithFilters(params);
           setUnassignedTickets(Array.isArray(unassignedData) ? unassignedData : (unassignedData?.content ? unassignedData.content : []));
         }
       } else if (user?.role === 'ADMIN') {
         ticketsData = await ticketService.getTickets(params);
+        allTicketsData = ticketsData; // Same data for admins
       } else {
-        ticketsData = await ticketService.getTickets({ ...params, createdBy: user.id });
+        const employeeId = user?.userId || user?.id;
+        ticketsData = await ticketService.getTickets({ ...params, createdBy: employeeId });
+        allTicketsData = ticketsData; // Same data for employees
       }
+      
       // Support both array and paginated response
       let ticketsArray = Array.isArray(ticketsData) ? ticketsData : (ticketsData?.content ? ticketsData.content : (ticketsData?.data ? ticketsData.data : []));
+      let allTicketsArray = Array.isArray(allTicketsData) ? allTicketsData : (allTicketsData?.content ? allTicketsData.content : (allTicketsData?.data ? allTicketsData.data : []));
+      
       setTickets(ticketsArray);
+      setAllTickets(allTicketsArray);
       setTotalCount(ticketsData?.totalElements || ticketsArray.length);
       setLoading(false);
     };
@@ -351,6 +520,34 @@ const Tickets = () => {
     }
   };
 
+  // Handle pagination changes
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (newRowsPerPage) => {
+    setRowsPerPage(newRowsPerPage);
+    setPage(0); // Reset to first page when changing rows per page
+  };
+
+  // Determine dynamic title and subtitle based on filters and user role
+  const getPageTitle = () => {
+    if (user?.role === 'TECHNICIAN') {
+      return 'Ticket Management';
+    }
+    return 'Ticket Management';
+  };
+
+  const getPageSubtitle = () => {
+    if (user?.role === 'TECHNICIAN') {
+      return 'Manage your assigned tickets and view all tickets in the system';
+    } else if (user?.role === 'ADMIN') {
+      return 'Manage all system tickets, assignments, and escalations';
+    } else {
+      return 'View and manage your submitted tickets';
+    }
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -360,151 +557,49 @@ const Tickets = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          {user?.role === 'TECHNICIAN' ? 'My Tickets' : 'Ticket Management'}
-        </Typography>
-        
-        {user?.role === 'TECHNICIAN' && (
-          <Typography variant="body1" color="textSecondary" gutterBottom>
-            Manage your assigned tickets and view unassigned tickets to pick up work
-          </Typography>
-        )}
-        
-        {user?.role === 'ADMIN' && (
-          <Typography variant="body1" color="textSecondary" gutterBottom>
-            Manage all system tickets, assignments, and escalations
-          </Typography>
-        )}
-        
-        {user?.role === 'EMPLOYEE' && (
-          <Typography variant="body1" color="textSecondary" gutterBottom>
-            View and manage your submitted tickets
-          </Typography>
-        )}
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Action Buttons */}
-      <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-        {/* Only show Create Ticket for Admins and Employees */}
-        {(user?.role === 'ADMIN' || user?.role === 'EMPLOYEE') && (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setCreateFormOpen(true)}
-          >
-            Create Ticket
-          </Button>
-        )}
-        
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={handleRefresh}
-        >
-          Refresh
-        </Button>
-      </Box>
-
-      {/* Filters */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Typography variant="subtitle1" sx={{ mr: 1 }}>
-            <FilterIcon sx={{ mr: 0.5, verticalAlign: 'middle' }} />
-            Filters:
-          </Typography>
-          
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              label="Status"
+    <PageLayout
+      title={getPageTitle()}
+      subtitle={getPageSubtitle()}
+      loading={loading}
+      error={error}
+      actions={
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          {/* Only show Create Ticket for Admins and Employees */}
+          {(user?.role === 'ADMIN' || user?.role === 'EMPLOYEE') && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreateFormOpen(true)}
             >
-              <MenuItem value="">All Statuses</MenuItem>
-              {statuses.map((status) => (
-                <MenuItem key={status} value={status}>
-                  {STATUS_LABELS[status] || status}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>Priority</InputLabel>
-            <Select
-              value={filters.priority}
-              onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-              label="Priority"
-            >
-              <MenuItem value="">All Priorities</MenuItem>
-              {priorities.map((priority) => (
-                <MenuItem key={priority} value={priority}>
-                  {PRIORITY_LABELS[priority] || priority}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {user?.role === 'ADMIN' && (
-            <>
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>Assigned To</InputLabel>
-                <Select
-                  value={filters.assignedTo}
-                  onChange={(e) => setFilters({ ...filters, assignedTo: e.target.value })}
-                  label="Assigned To"
-                >
-                  <MenuItem value="">All Assignments</MenuItem>
-                  {users.filter(u => u.role === 'TECHNICIAN').map((user) => (
-                    <MenuItem key={user.id} value={user.id}>
-                      {user.fullName || user.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>Created By</InputLabel>
-                <Select
-                  value={filters.createdBy}
-                  onChange={(e) => setFilters({ ...filters, createdBy: e.target.value })}
-                  label="Created By"
-                >
-                  <MenuItem value="">All Creators</MenuItem>
-                  {users.map((user) => (
-                    <MenuItem key={user.id} value={user.id}>
-                      {user.fullName || user.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </>
+              Create Ticket
+            </Button>
           )}
-
+          
           <Button
             variant="outlined"
-            size="small"
-            onClick={() => setFilters({ status: '', priority: '', assignedTo: '', createdBy: '' })}
+            startIcon={<RefreshIcon />}
+            onClick={handleRefresh}
           >
-            Clear Filters
+            Refresh
           </Button>
         </Box>
-      </Paper>
+      }
+    >
+      {/* Enhanced Filters */}
+      <EnhancedFilters
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        filterConfigs={filterConfigs}
+        loading={loading}
+        searchPlaceholder="Search tickets by title, description, or category..."
+      />
 
       {/* Tabs for Technicians */}
       {user?.role === 'TECHNICIAN' && TECHNICIAN_PERMISSIONS.viewUnassignedTickets && (
         <Box sx={{ mb: 3 }}>
           <Tabs value={tabValue} onChange={handleTabChange}>
-            <Tab label={`My Assigned Tickets (${filteredTickets.length})`} />
-            <Tab label={`Unassigned Tickets (${filteredUnassignedTickets.length})`} />
+            <Tab label={`Technician Assigned Tickets (${filteredTickets.length})`} />
+            <Tab label={`All Tickets (${filteredAllTickets.length})`} />
           </Tabs>
         </Box>
       )}
@@ -661,17 +756,17 @@ const Tickets = () => {
           </Table>
         </TableContainer>
         
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          component="div"
+        {/* Enhanced Pagination */}
+        <EnhancedPagination
           count={totalCount}
-          rowsPerPage={rowsPerPage}
           page={page}
-          onPageChange={(event, newPage) => setPage(newPage)}
-          onRowsPerPageChange={(event) => {
-            setRowsPerPage(parseInt(event.target.value, 10));
-            setPage(0);
-          }}
+          rowsPerPage={rowsPerPage}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          loading={loading}
+          showInfo={true}
+          showPageSizeSelector={true}
         />
       </Paper>
 
@@ -862,7 +957,7 @@ const Tickets = () => {
           setCreateFormOpen(false);
         }}
       />
-    </Container>
+    </PageLayout>
   );
 };
 

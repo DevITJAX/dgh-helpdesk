@@ -174,11 +174,65 @@ export const userService = {
 
   getUserStatistics: async () => {
     try {
+      // First try to get statistics from the backend API
       const response = await apiClient.get('/api/users/statistics');
-      return response.data;
+      const apiStats = response.data;
+      
+      // Check if the API returned meaningful data
+      if (apiStats && apiStats.totalUsers > 0) {
+        console.log('UserService: Using API statistics:', apiStats);
+        return apiStats;
+      }
+      
+      // Fallback: Calculate statistics from actual user data
+      console.log('UserService: API returned empty/mock data, calculating from user list...');
+      const allUsersResponse = await apiClient.get('/api/users');
+      const allUsers = allUsersResponse.data.content || allUsersResponse.data || [];
+      
+      // Calculate real statistics
+      const totalUsers = allUsers.length;
+      const activeUsers = allUsers.filter(user => user.isActive !== false).length;
+      const inactiveUsers = totalUsers - activeUsers;
+      
+      // Count by role
+      const adminCount = allUsers.filter(user => user.role === 'ADMIN').length;
+      const technicianCount = allUsers.filter(user => user.role === 'TECHNICIAN').length;
+      const employeeCount = allUsers.filter(user => user.role === 'USER' || user.role === 'EMPLOYEE').length;
+      
+      // Calculate department distribution
+      const departmentCounts = {};
+      allUsers.forEach(user => {
+        if (user.department) {
+          departmentCounts[user.department] = (departmentCounts[user.department] || 0) + 1;
+        }
+      });
+      
+      const calculatedStats = {
+        totalUsers,
+        activeUsers,
+        inactiveUsers,
+        adminCount,
+        technicianCount,
+        employeeCount,
+        departmentDistribution: departmentCounts
+      };
+      
+      console.log('UserService: Calculated statistics:', calculatedStats);
+      return calculatedStats;
+      
     } catch (error) {
       console.error('UserService: Error fetching user statistics:', error);
-      throw error;
+      
+      // Final fallback: return basic structure with zeros
+      return {
+        totalUsers: 0,
+        activeUsers: 0,
+        inactiveUsers: 0,
+        adminCount: 0,
+        technicianCount: 0,
+        employeeCount: 0,
+        departmentDistribution: {}
+      };
     }
   },
 

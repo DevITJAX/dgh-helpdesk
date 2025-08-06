@@ -6,7 +6,6 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TablePagination,
   TableRow,
   Paper,
   IconButton,
@@ -14,14 +13,8 @@ import {
   Avatar,
   Typography,
   Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Grid,
-  Tooltip,
   Menu,
+  MenuItem,
   ListItemIcon,
   ListItemText,
   Divider,
@@ -40,10 +33,10 @@ import {
   PersonOff as PersonOffIcon,
   AdminPanelSettings as AdminIcon,
   Build as TechnicianIcon,
-  Person as EmployeeIcon,
-  Search as SearchIcon,
-  Clear as ClearIcon
+  Person as EmployeeIcon
 } from '@mui/icons-material';
+import EnhancedPagination from '../../../components/common/EnhancedPagination';
+import EnhancedFilters from '../../../components/common/EnhancedFilters';
 
 const UserList = ({
   users,
@@ -117,32 +110,16 @@ const UserList = ({
     handleMenuClose();
   };
 
-  const handleFilterChange = (field, value) => {
-    onFiltersChange({
-      ...filters,
-      [field]: value
-    });
-  };
-
-  const handleClearFilters = () => {
-    onFiltersChange({
-      search: '',
-      role: '',
-      department: '',
-      isActive: null
-    });
-  };
-
   const getRoleIcon = (role) => {
     switch (role) {
       case 'ADMIN':
-        return <AdminIcon fontSize="small" />;
+        return <AdminIcon />;
       case 'TECHNICIAN':
-        return <TechnicianIcon fontSize="small" />;
+        return <TechnicianIcon />;
       case 'EMPLOYEE':
-        return <EmployeeIcon fontSize="small" />;
+        return <EmployeeIcon />;
       default:
-        return <EmployeeIcon fontSize="small" />;
+        return <EmployeeIcon />;
     }
   };
 
@@ -153,7 +130,7 @@ const UserList = ({
       case 'TECHNICIAN':
         return 'warning';
       case 'EMPLOYEE':
-        return 'primary';
+        return 'default';
       default:
         return 'default';
     }
@@ -161,13 +138,7 @@ const UserList = ({
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return new Date(dateString).toLocaleDateString();
   };
 
   const getInitials = (fullName) => {
@@ -180,86 +151,62 @@ const UserList = ({
       .slice(0, 2);
   };
 
+  // Filter configurations
+  const filterConfigs = [
+    {
+      field: 'role',
+      label: 'Role',
+      type: 'select',
+      options: [
+        { value: 'ADMIN', label: 'Admin' },
+        { value: 'TECHNICIAN', label: 'Technician' },
+        { value: 'EMPLOYEE', label: 'Employee' }
+      ]
+    },
+    {
+      field: 'department',
+      label: 'Department',
+      type: 'text'
+    },
+    {
+      field: 'isActive',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'true', label: 'Active' },
+        { value: 'false', label: 'Inactive' }
+      ]
+    }
+  ];
+
   return (
     <Box>
-      {/* Filters and Actions */}
-      <Box sx={{ mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Search users..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Role</InputLabel>
-              <Select
-                value={filters.role}
-                label="Role"
-                onChange={(e) => handleFilterChange('role', e.target.value)}
-              >
-                <MenuItem value="">All Roles</MenuItem>
-                <MenuItem value="ADMIN">Administrator</MenuItem>
-                <MenuItem value="TECHNICIAN">Technician</MenuItem>
-                <MenuItem value="EMPLOYEE">Employee</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={2}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Department"
-              value={filters.department}
-              onChange={(e) => handleFilterChange('department', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={filters.isActive === null ? '' : filters.isActive.toString()}
-                label="Status"
-                onChange={(e) => {
-                  const value = e.target.value;
-                  handleFilterChange('isActive', value === '' ? null : value === 'true');
-                }}
-              >
-                <MenuItem value="">All Status</MenuItem>
-                <MenuItem value="true">Active</MenuItem>
-                <MenuItem value="false">Inactive</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={1}>
-            <Tooltip title="Clear Filters">
-              <IconButton onClick={handleClearFilters}>
-                <ClearIcon />
-              </IconButton>
-            </Tooltip>
-          </Grid>
-          <Grid item xs={12} md={2}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={onCreateUser}
-              fullWidth
-            >
-              Add User
-            </Button>
-          </Grid>
-        </Grid>
+      {/* Enhanced Filters */}
+      <EnhancedFilters
+        filters={filters}
+        onFiltersChange={onFiltersChange}
+        filterConfigs={filterConfigs}
+        loading={loading}
+        searchPlaceholder="Search users by name, email, or username..."
+      />
+
+      {/* Actions */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6" component="h2">
+          Users ({totalUsers})
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={onCreateUser}
+          disabled={loading}
+        >
+          Add User
+        </Button>
       </Box>
 
-      {/* Users Table */}
-      <TableContainer component={Paper} variant="outlined">
+      {/* Table */}
+      <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
@@ -268,14 +215,13 @@ const UserList = ({
               <TableCell>Department</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Last Login</TableCell>
-              <TableCell>Created</TableCell>
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   <Typography variant="body2" color="text.secondary">
                     Loading users...
                   </Typography>
@@ -283,7 +229,7 @@ const UserList = ({
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   <Typography variant="body2" color="text.secondary">
                     No users found
                   </Typography>
@@ -329,36 +275,23 @@ const UserList = ({
                       label={user.isActive ? 'Active' : 'Inactive'}
                       color={user.isActive ? 'success' : 'default'}
                       size="small"
-                      variant={user.isActive ? 'filled' : 'outlined'}
+                      variant="outlined"
                     />
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="text.secondary">
-                      {formatDate(user.lastLogin)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {formatDate(user.createdAt)}
+                      {formatDate(user.lastLoginAt)}
                     </Typography>
                   </TableCell>
                   <TableCell align="center">
-                    <Tooltip title="Edit User">
-                      <IconButton
-                        size="small"
-                        onClick={() => onEditUser(user)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="More Actions">
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                       <IconButton
                         size="small"
                         onClick={(e) => handleMenuOpen(e, user)}
                       >
                         <MoreVertIcon />
                       </IconButton>
-                    </Tooltip>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))
@@ -367,15 +300,17 @@ const UserList = ({
         </Table>
       </TableContainer>
 
-      {/* Pagination */}
-      <TablePagination
-        component="div"
+      {/* Enhanced Pagination */}
+      <EnhancedPagination
         count={totalUsers}
         page={page}
-        onPageChange={onPageChange}
         rowsPerPage={rowsPerPage}
+        onPageChange={onPageChange}
         onRowsPerPageChange={onRowsPerPageChange}
-        rowsPerPageOptions={[5, 10, 25, 50]}
+        rowsPerPageOptions={[5, 10, 25, 50, 100]}
+        loading={loading}
+        showInfo={true}
+        showPageSizeSelector={true}
       />
 
       {/* Actions Menu */}
@@ -457,8 +392,7 @@ const UserList = ({
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete user "{userToDelete?.fullName}"? 
-            This action cannot be undone and will remove all associated data.
+            Are you sure you want to delete user "{userToDelete?.fullName}"? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

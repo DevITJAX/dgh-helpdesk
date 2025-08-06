@@ -18,7 +18,8 @@ const AUTH_ACTIONS = {
   LOGIN_FAILURE: 'LOGIN_FAILURE',
   LOGOUT: 'LOGOUT',
   CLEAR_ERROR: 'CLEAR_ERROR',
-  SET_LOADING: 'SET_LOADING'
+  SET_LOADING: 'SET_LOADING',
+  TOKEN_REFRESHED: 'TOKEN_REFRESHED'
 };
 
 // Reducer
@@ -67,6 +68,12 @@ const authReducer = (state, action) => {
         ...state,
         loading: action.payload
       };
+    case AUTH_ACTIONS.TOKEN_REFRESHED:
+      return {
+        ...state,
+        token: action.payload.token,
+        error: null
+      };
     default:
       return state;
   }
@@ -84,43 +91,23 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const token = localStorage.getItem('authToken');
-        console.log('AuthContext: Checking for existing token:', token ? 'Found' : 'Not found');
+        // Try to get user info using the auth service
+        const user = await authService.getUserInfo();
         
-        if (token && token.trim() !== '') {
-          // Try to verify the stored token
-          try {
-            console.log('AuthContext: Attempting to verify stored token...');
-            const user = await authService.verifyToken(token);
-            console.log('AuthContext: Token verification successful:', user);
-            
-            dispatch({
-              type: AUTH_ACTIONS.LOGIN_SUCCESS,
-              payload: { user, token }
-            });
-          } catch (verifyError) {
-            console.log('AuthContext: Token verification failed, trying getUserInfo instead');
-            try {
-              const user = await authService.getUserInfo();
-              console.log('AuthContext: getUserInfo successful:', user);
-              dispatch({
-                type: AUTH_ACTIONS.LOGIN_SUCCESS,
-                payload: { user, token }
-              });
-            } catch (userInfoError) {
-              console.log('AuthContext: getUserInfo also failed, clearing token');
-              localStorage.removeItem('authToken');
-              dispatch({ type: AUTH_ACTIONS.LOGOUT });
-            }
-          }
+        if (user) {
+          // Get current token from auth service
+          const token = await authService.getToken();
+          
+          dispatch({
+            type: AUTH_ACTIONS.LOGIN_SUCCESS,
+            payload: { user, token }
+          });
         } else {
-          // No token found, ensure we're logged out
-          console.log('AuthContext: No token found, staying logged out');
           dispatch({ type: AUTH_ACTIONS.LOGOUT });
         }
       } catch (error) {
-        console.error('AuthContext: Error checking auth status:', error);
-        localStorage.removeItem('authToken');
+        // Clear any invalid tokens
+        authService.clearTokens();
         dispatch({ type: AUTH_ACTIONS.LOGOUT });
       } finally {
         dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
@@ -132,30 +119,18 @@ export const AuthProvider = ({ children }) => {
 
   // Login function
   const login = async (username, password) => {
-    console.log('AuthContext: Starting login process');
     dispatch({ type: AUTH_ACTIONS.LOGIN_START });
     
     try {
-      console.log('AuthContext: Calling authService.login');
       const { user, token } = await authService.login(username, password);
-      console.log('AuthContext: Login response:', { user, token });
-      
-      // Store the session token for API calls
-      if (token) {
-        localStorage.setItem('authToken', token);
-        console.log('AuthContext: Session token stored for API calls');
-      }
       
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
         payload: { user, token }
       });
-      console.log('AuthContext: Login success dispatched');
       
       return { success: true };
     } catch (error) {
-      console.error('AuthContext: Login error:', error);
-      
       let errMsg = 'Login failed';
       
       // Handle different types of errors
@@ -171,8 +146,6 @@ export const AuthProvider = ({ children }) => {
         errMsg = error.message;
       }
       
-      console.error('AuthContext: Final error message:', errMsg);
-      
       dispatch({
         type: AUTH_ACTIONS.LOGIN_FAILURE,
         payload: errMsg
@@ -185,13 +158,10 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      if (state.token) {
-        await authService.logout(state.token);
-      }
+      await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('authToken');
       dispatch({ type: AUTH_ACTIONS.LOGOUT });
     }
   };
@@ -209,12 +179,28 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  // Refresh token function
+  const refreshToken = async () => {
+    try {
+      const newToken = await authService.refreshToken();
+      dispatch({
+        type: AUTH_ACTIONS.TOKEN_REFRESHED,
+        payload: { token: newToken }
+      });
+      return newToken;
+    } catch (error) {
+      dispatch({ type: AUTH_ACTIONS.LOGOUT });
+      throw error;
+    }
+  };
+
   const value = {
     ...state,
     login,
     logout,
     clearError,
-    updateUser
+    updateUser,
+    refreshToken
   };
 
   return (

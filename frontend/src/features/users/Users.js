@@ -10,9 +10,9 @@ import {
   Snackbar
 } from '@mui/material';
 import UserList from './components/UserList';
-import UserStatistics from './components/UserStatistics';
 import UserForm from './components/UserForm';
 import { userService } from '../../services/userService';
+import PageLayout from '../../components/common/PageLayout';
 
 function TabPanel({ children, value, index, ...other }) {
   return (
@@ -38,7 +38,6 @@ const Users = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [statistics, setStatistics] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserForm, setShowUserForm] = useState(false);
 
@@ -97,19 +96,9 @@ const Users = () => {
     }
   }, [page, rowsPerPage, filters]);
 
-  const loadStatistics = useCallback(async () => {
-    try {
-      const stats = await userService.getUserStatistics();
-      setStatistics(stats);
-    } catch (err) {
-      console.error('Error loading user statistics:', err);
-    }
-  }, []);
-
   useEffect(() => {
     loadUsers();
-    loadStatistics();
-  }, [loadUsers, loadStatistics]);
+  }, [loadUsers]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -135,7 +124,6 @@ const Users = () => {
     setSelectedUser(null);
     setSuccess(selectedUser ? 'User updated successfully!' : 'User created successfully!');
     await loadUsers();
-    await loadStatistics();
   };
 
   const handleDeleteUser = async (userId) => {
@@ -143,7 +131,6 @@ const Users = () => {
       await userService.deleteUser(userId);
       setSuccess('User deleted successfully!');
       await loadUsers();
-      await loadStatistics();
     } catch (err) {
       console.error('Error deleting user:', err);
       setError('Failed to delete user. Please try again.');
@@ -155,7 +142,6 @@ const Users = () => {
       await userService.activateUser(userId);
       setSuccess('User activated successfully!');
       await loadUsers();
-      await loadStatistics();
     } catch (err) {
       console.error('Error activating user:', err);
       setError('Failed to activate user. Please try again.');
@@ -167,7 +153,6 @@ const Users = () => {
       await userService.deactivateUser(userId);
       setSuccess('User deactivated successfully!');
       await loadUsers();
-      await loadStatistics();
     } catch (err) {
       console.error('Error deactivating user:', err);
       setError('Failed to deactivate user. Please try again.');
@@ -179,7 +164,6 @@ const Users = () => {
       await userService.changeUserRole(userId, newRole);
       setSuccess('User role updated successfully!');
       await loadUsers();
-      await loadStatistics();
     } catch (err) {
       console.error('Error changing user role:', err);
       setError('Failed to update user role. Please try again.');
@@ -206,21 +190,16 @@ const Users = () => {
   };
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          User Management
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage system users, roles, and permissions
-        </Typography>
-      </Box>
-
+    <PageLayout
+      title="User Management"
+      subtitle="Manage system users, roles, and permissions"
+      loading={loading}
+      error={error}
+    >
       <Paper sx={{ width: '100%' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={tabValue} onChange={handleTabChange} aria-label="user management tabs">
             <Tab label="Users" id="user-tab-0" aria-controls="user-tabpanel-0" />
-            <Tab label="Statistics" id="user-tab-1" aria-controls="user-tabpanel-1" />
           </Tabs>
         </Box>
 
@@ -242,10 +221,6 @@ const Users = () => {
             onDeactivateUser={handleDeactivateUser}
             onChangeUserRole={handleChangeUserRole}
           />
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={1}>
-          <UserStatistics statistics={statistics} />
         </TabPanel>
       </Paper>
 
@@ -279,7 +254,7 @@ const Users = () => {
           {success}
         </Alert>
       </Snackbar>
-    </Container>
+    </PageLayout>
   );
 };
 

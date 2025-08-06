@@ -37,7 +37,8 @@ import {
   Settings as ManagedIcon,
   LocationOn as LocationIcon,
   Business as ManufacturerIcon,
-  TrendingUp as TrendingUpIcon
+  TrendingUp as TrendingUpIcon,
+  QuestionMark
 } from '@mui/icons-material';
 
 const StatCard = ({ title, value, icon, color = 'primary', subtitle, trend }) => (
@@ -446,17 +447,21 @@ const EquipmentStatistics = ({ statistics }) => {
   }
 
   const onlinePercentage = statistics.totalEquipment > 0 
-    ? ((statistics.onlineCount / statistics.totalEquipment) * 100).toFixed(1)
+    ? ((statistics.onlineCount || 0) / statistics.totalEquipment * 100).toFixed(1)
+    : 0;
+
+  const offlinePercentage = statistics.totalEquipment > 0 
+    ? ((statistics.offlineCount || 0) / statistics.totalEquipment * 100).toFixed(1)
     : 0;
 
   const managedPercentage = statistics.totalEquipment > 0 
-    ? ((statistics.managedCount / statistics.totalEquipment) * 100).toFixed(1)
+    ? ((statistics.managedCount || 0) / statistics.totalEquipment * 100).toFixed(1)
     : 0;
 
   return (
     <Box>
       <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-        Equipment Statistics Overview
+        Equipment Overview
       </Typography>
 
       {/* Main Statistics Cards */}
@@ -481,6 +486,15 @@ const EquipmentStatistics = ({ statistics }) => {
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
+            title="Offline Equipment"
+            value={statistics.offlineCount || 0}
+            icon={<OfflineIcon />}
+            color="error"
+            subtitle={`${offlinePercentage}% of total`}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
             title="Managed Equipment"
             value={statistics.managedCount || 0}
             icon={<ManagedIcon />}
@@ -488,86 +502,76 @@ const EquipmentStatistics = ({ statistics }) => {
             subtitle={`${managedPercentage}% of total`}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Locations"
-            value={Object.keys(statistics.locationDistribution || {}).length}
-            icon={<LocationIcon />}
-            color="warning"
-            subtitle="Active locations"
-          />
-        </Grid>
       </Grid>
 
-      {/* Distribution Charts */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={6}>
-          <TypeDistributionCard statistics={statistics} />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <StatusDistributionCard statistics={statistics} />
-        </Grid>
-      </Grid>
-
+      {/* Equipment Status Summary */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
-          <LocationDistributionCard statistics={statistics} />
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Equipment Status
+              </Typography>
+              <List>
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'success.main' }}>
+                      <OnlineIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Online"
+                    secondary={`${statistics.onlineCount || 0} devices`}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'error.main' }}>
+                      <OfflineIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Offline"
+                    secondary={`${statistics.offlineCount || 0} devices`}
+                  />
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <ManufacturerDistributionCard statistics={statistics} />
-        </Grid>
-      </Grid>
 
-      {/* Additional Statistics */}
-      <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Quick Facts
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="success.main">
-                    {statistics.onlineCount || 0}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    Online Devices
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="error.main">
-                    {statistics.offlineCount || 0}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    Offline Devices
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="info.main">
-                    {statistics.managedCount || 0}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    Managed Devices
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="warning.main">
-                    {statistics.unmanagedCount || 0}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    Unmanaged Devices
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Paper>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Management Status
+              </Typography>
+              <List>
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'info.main' }}>
+                      <ManagedIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Managed"
+                    secondary={`${statistics.managedCount || 0} devices`}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'warning.main' }}>
+                      <QuestionMark />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Unmanaged"
+                    secondary={`${statistics.unmanagedCount || 0} devices`}
+                  />
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
     </Box>

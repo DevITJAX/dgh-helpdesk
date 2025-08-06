@@ -1,4 +1,4 @@
-  import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Table,
@@ -6,21 +6,14 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TablePagination,
   TableRow,
   Paper,
   IconButton,
   Chip,
   Typography,
   Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Grid,
-  Tooltip,
   Menu,
+  MenuItem,
   ListItemIcon,
   ListItemText,
   Divider,
@@ -49,8 +42,6 @@ import {
   DeviceHub as SwitchIcon,
   Wifi as AccessPointIcon,
   HelpOutline as UnknownIcon,
-  Search as SearchIcon,
-  Clear as ClearIcon,
   CheckCircle as OnlineIcon,
   Cancel as OfflineIcon,
   Build as MaintenanceIcon,
@@ -59,6 +50,8 @@ import {
   Settings as ManageIcon,
   SettingsInputComponent as UnmanageIcon
 } from '@mui/icons-material';
+import EnhancedPagination from '../../../components/common/EnhancedPagination';
+import EnhancedFilters from '../../../components/common/EnhancedFilters';
 
 const EquipmentList = ({
   equipment,
@@ -133,89 +126,49 @@ const EquipmentList = ({
     handleMenuClose();
   };
 
-  const handleFilterChange = (field, value) => {
-    onFiltersChange({
-      ...filters,
-      [field]: value
-    });
-  };
-
-  const handleClearFilters = () => {
-    onFiltersChange({
-      search: '',
-      equipmentType: '',
-      status: '',
-      location: '',
-      isManaged: null
-    });
-  };
-
-  const getEquipmentTypeIcon = (type) => {
+  const getEquipmentIcon = (type) => {
     switch (type) {
-      case 'DESKTOP':
-      case 'LAPTOP':
-        return <ComputerIcon fontSize="small" />;
-      case 'SERVER':
-        return <StorageIcon fontSize="small" />;
-      case 'PRINTER':
-        return <PrintIcon fontSize="small" />;
+      case 'COMPUTER':
+        return <ComputerIcon />;
       case 'ROUTER':
-        return <RouterIcon fontSize="small" />;
-      case 'SWITCH':
-        return <SwitchIcon fontSize="small" />;
-      case 'ACCESS_POINT':
-        return <AccessPointIcon fontSize="small" />;
-      case 'FIREWALL':
-        return <FirewallIcon fontSize="small" />;
-      case 'UPS':
-        return <UpsIcon fontSize="small" />;
-      case 'SCANNER':
-        return <ScannerIcon fontSize="small" />;
-      case 'PROJECTOR':
-        return <ProjectorIcon fontSize="small" />;
-      case 'PHONE':
-        return <PhoneIcon fontSize="small" />;
-      case 'MONITOR':
-        return <MonitorIcon fontSize="small" />;
+        return <RouterIcon />;
+      case 'PRINTER':
+        return <PrintIcon />;
       case 'STORAGE':
-        return <StorageIcon fontSize="small" />;
-      default:
-        return <UnknownIcon fontSize="small" />;
-    }
-  };
-
-  const getEquipmentTypeColor = (type) => {
-    switch (type) {
-      case 'DESKTOP':
-      case 'LAPTOP':
-        return 'primary';
-      case 'SERVER':
-        return 'error';
-      case 'PRINTER':
-        return 'secondary';
-      case 'ROUTER':
-      case 'SWITCH':
-      case 'ACCESS_POINT':
-        return 'info';
+        return <StorageIcon />;
+      case 'MOBILE':
+        return <PhoneIcon />;
+      case 'MONITOR':
+        return <MonitorIcon />;
+      case 'SCANNER':
+        return <ScannerIcon />;
+      case 'PROJECTOR':
+        return <ProjectorIcon />;
       case 'FIREWALL':
-        return 'warning';
+        return <FirewallIcon />;
+      case 'UPS':
+        return <UpsIcon />;
+      case 'SWITCH':
+        return <SwitchIcon />;
+      case 'ACCESS_POINT':
+        return <AccessPointIcon />;
       default:
-        return 'default';
+        return <UnknownIcon />;
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
       case 'ONLINE':
-        return <OnlineIcon fontSize="small" />;
+        return <OnlineIcon />;
       case 'OFFLINE':
-        return <OfflineIcon fontSize="small" />;
+        return <OfflineIcon />;
       case 'MAINTENANCE':
-        return <MaintenanceIcon fontSize="small" />;
+        return <MaintenanceIcon />;
       case 'RETIRED':
-        return <RetiredIcon fontSize="small" />;
+        return <RetiredIcon />;
       default:
-        return <UnknownStatusIcon fontSize="small" />;
+        return <UnknownStatusIcon />;
     }
   };
 
@@ -234,147 +187,91 @@ const EquipmentList = ({
     }
   };
 
+  const getEquipmentDisplayName = (item) => {
+    return item.hostname || item.ipAddress || item.macAddress || 'Unknown Equipment';
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return new Date(dateString).toLocaleDateString();
   };
 
-  const getEquipmentDisplayName = (equipment) => {
-    if (!equipment) return 'Unknown Device';
-    return equipment.hostname || equipment.ipAddress || 'Unknown Device';
-  };
-
-  const equipmentTypes = [
-    { value: 'DESKTOP', label: 'Desktop Computer' },
-    { value: 'LAPTOP', label: 'Laptop Computer' },
-    { value: 'SERVER', label: 'Server' },
-    { value: 'PRINTER', label: 'Printer' },
-    { value: 'SWITCH', label: 'Network Switch' },
-    { value: 'ROUTER', label: 'Router' },
-    { value: 'ACCESS_POINT', label: 'Access Point' },
-    { value: 'FIREWALL', label: 'Firewall' },
-    { value: 'UPS', label: 'UPS' },
-    { value: 'SCANNER', label: 'Scanner' },
-    { value: 'PROJECTOR', label: 'Projector' },
-    { value: 'PHONE', label: 'IP Phone' },
-    { value: 'MONITOR', label: 'Monitor' },
-    { value: 'STORAGE', label: 'Storage Device' },
-    { value: 'UNKNOWN', label: 'Unknown' }
-  ];
-
-  const statusOptions = [
-    { value: 'ONLINE', label: 'Online' },
-    { value: 'OFFLINE', label: 'Offline' },
-    { value: 'MAINTENANCE', label: 'Under Maintenance' },
-    { value: 'RETIRED', label: 'Retired' },
-    { value: 'UNKNOWN', label: 'Unknown' }
+  // Filter configurations
+  const filterConfigs = [
+    {
+      field: 'equipmentType',
+      label: 'Equipment Type',
+      type: 'select',
+      options: [
+        { value: 'COMPUTER', label: 'Computer' },
+        { value: 'ROUTER', label: 'Router' },
+        { value: 'PRINTER', label: 'Printer' },
+        { value: 'STORAGE', label: 'Storage' },
+        { value: 'MOBILE', label: 'Mobile Device' },
+        { value: 'MONITOR', label: 'Monitor' },
+        { value: 'SCANNER', label: 'Scanner' },
+        { value: 'PROJECTOR', label: 'Projector' },
+        { value: 'FIREWALL', label: 'Firewall' },
+        { value: 'UPS', label: 'UPS' },
+        { value: 'SWITCH', label: 'Switch' },
+        { value: 'ACCESS_POINT', label: 'Access Point' }
+      ]
+    },
+    {
+      field: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'ONLINE', label: 'Online' },
+        { value: 'OFFLINE', label: 'Offline' },
+        { value: 'MAINTENANCE', label: 'Maintenance' },
+        { value: 'RETIRED', label: 'Retired' }
+      ]
+    },
+    {
+      field: 'location',
+      label: 'Location',
+      type: 'text'
+    },
+    {
+      field: 'isManaged',
+      label: 'Management',
+      type: 'select',
+      options: [
+        { value: 'true', label: 'Managed' },
+        { value: 'false', label: 'Unmanaged' }
+      ]
+    }
   ];
 
   return (
     <Box>
-      {/* Filters and Actions */}
-      <Box sx={{ mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Search equipment..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Type</InputLabel>
-              <Select
-                value={filters.equipmentType}
-                label="Type"
-                onChange={(e) => handleFilterChange('equipmentType', e.target.value)}
-              >
-                <MenuItem value="">All Types</MenuItem>
-                {equipmentTypes.map((type) => (
-                  <MenuItem key={type.value} value={type.value}>
-                    {type.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={filters.status}
-                label="Status"
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-              >
-                <MenuItem value="">All Status</MenuItem>
-                {statusOptions.map((status) => (
-                  <MenuItem key={status.value} value={status.value}>
-                    {status.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={2}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Location"
-              value={filters.location}
-              onChange={(e) => handleFilterChange('location', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} md={1}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Managed</InputLabel>
-              <Select
-                value={filters.isManaged === null ? '' : filters.isManaged.toString()}
-                label="Managed"
-                onChange={(e) => {
-                  const value = e.target.value;
-                  handleFilterChange('isManaged', value === '' ? null : value === 'true');
-                }}
-              >
-                <MenuItem value="">All</MenuItem>
-                <MenuItem value="true">Managed</MenuItem>
-                <MenuItem value="false">Unmanaged</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={1}>
-            <Tooltip title="Clear Filters">
-              <IconButton onClick={handleClearFilters}>
-                <ClearIcon />
-              </IconButton>
-            </Tooltip>
-          </Grid>
-          <Grid item xs={12} md={1}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={onCreateEquipment}
-              fullWidth
-            >
-              Add
-            </Button>
-          </Grid>
-        </Grid>
+      {/* Enhanced Filters */}
+      <EnhancedFilters
+        filters={filters}
+        onFiltersChange={onFiltersChange}
+        filterConfigs={filterConfigs}
+        loading={loading}
+        searchPlaceholder="Search equipment by hostname, IP, or MAC address..."
+      />
+
+      {/* Actions */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6" component="h2">
+          Equipment ({totalEquipment})
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={onCreateEquipment}
+          disabled={loading}
+        >
+          Add Equipment
+        </Button>
       </Box>
 
-      {/* Equipment Table */}
-      <TableContainer component={Paper} variant="outlined">
+      {/* Table */}
+      <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
@@ -409,8 +306,8 @@ const EquipmentList = ({
                 <TableRow key={item.id} hover>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar sx={{ width: 40, height: 40, bgcolor: `${getEquipmentTypeColor(item.equipmentType)}.main` }}>
-                        {getEquipmentTypeIcon(item.equipmentType)}
+                      <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
+                        {getEquipmentIcon(item.equipmentType)}
                       </Avatar>
                       <Box>
                         <Typography variant="subtitle2" fontWeight="medium">
@@ -419,19 +316,16 @@ const EquipmentList = ({
                         <Typography variant="body2" color="text.secondary">
                           {item.ipAddress}
                         </Typography>
-                        {item.manufacturer && item.model && (
-                          <Typography variant="caption" color="text.secondary">
-                            {item.manufacturer} {item.model}
-                          </Typography>
-                        )}
+                        <Typography variant="caption" color="text.secondary">
+                          {item.macAddress}
+                        </Typography>
                       </Box>
                     </Box>
                   </TableCell>
                   <TableCell>
                     <Chip
-                      icon={getEquipmentTypeIcon(item.equipmentType)}
+                      icon={getEquipmentIcon(item.equipmentType)}
                       label={item.equipmentType?.replace('_', ' ') || 'UNKNOWN'}
-                      color={getEquipmentTypeColor(item.equipmentType)}
                       size="small"
                       variant="outlined"
                     />
@@ -439,10 +333,10 @@ const EquipmentList = ({
                   <TableCell>
                     <Chip
                       icon={getStatusIcon(item.status)}
-                      label={item.status?.replace('_', ' ') || 'UNKNOWN'}
+                      label={item.status || 'UNKNOWN'}
                       color={getStatusColor(item.status)}
                       size="small"
-                      variant={item.status === 'ONLINE' ? 'filled' : 'outlined'}
+                      variant="outlined"
                     />
                   </TableCell>
                   <TableCell>
@@ -452,34 +346,27 @@ const EquipmentList = ({
                   </TableCell>
                   <TableCell>
                     <Chip
+                      icon={item.isManaged ? <ManageIcon /> : <UnmanageIcon />}
                       label={item.isManaged ? 'Managed' : 'Unmanaged'}
                       color={item.isManaged ? 'success' : 'default'}
                       size="small"
-                      variant={item.isManaged ? 'filled' : 'outlined'}
+                      variant="outlined"
                     />
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="text.secondary">
-                      {formatDate(item.lastSeen)}
+                      {formatDate(item.lastSeenAt)}
                     </Typography>
                   </TableCell>
                   <TableCell align="center">
-                    <Tooltip title="Edit Equipment">
-                      <IconButton
-                        size="small"
-                        onClick={() => onEditEquipment(item)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="More Actions">
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
                       <IconButton
                         size="small"
                         onClick={(e) => handleMenuOpen(e, item)}
                       >
                         <MoreVertIcon />
                       </IconButton>
-                    </Tooltip>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))
@@ -488,15 +375,17 @@ const EquipmentList = ({
         </Table>
       </TableContainer>
 
-      {/* Pagination */}
-      <TablePagination
-        component="div"
+      {/* Enhanced Pagination */}
+      <EnhancedPagination
         count={totalEquipment}
         page={page}
-        onPageChange={onPageChange}
         rowsPerPage={rowsPerPage}
+        onPageChange={onPageChange}
         onRowsPerPageChange={onRowsPerPageChange}
-        rowsPerPageOptions={[5, 10, 25, 50]}
+        rowsPerPageOptions={[5, 10, 25, 50, 100]}
+        loading={loading}
+        showInfo={true}
+        showPageSizeSelector={true}
       />
 
       {/* Actions Menu */}
@@ -519,30 +408,30 @@ const EquipmentList = ({
         
         <MenuItem onClick={() => handleStatusChange('ONLINE')}>
           <ListItemIcon>
-            <OnlineIcon fontSize="small" color="success" />
+            <OnlineIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Mark Online</ListItemText>
+          <ListItemText>Mark as Online</ListItemText>
         </MenuItem>
         
         <MenuItem onClick={() => handleStatusChange('OFFLINE')}>
           <ListItemIcon>
-            <OfflineIcon fontSize="small" color="error" />
+            <OfflineIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Mark Offline</ListItemText>
+          <ListItemText>Mark as Offline</ListItemText>
         </MenuItem>
         
         <MenuItem onClick={() => handleStatusChange('MAINTENANCE')}>
           <ListItemIcon>
-            <MaintenanceIcon fontSize="small" color="warning" />
+            <MaintenanceIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Mark Under Maintenance</ListItemText>
+          <ListItemText>Mark as Maintenance</ListItemText>
         </MenuItem>
         
         <MenuItem onClick={() => handleStatusChange('RETIRED')}>
           <ListItemIcon>
             <RetiredIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Mark Retired</ListItemText>
+          <ListItemText>Mark as Retired</ListItemText>
         </MenuItem>
         
         <Divider />
@@ -565,14 +454,12 @@ const EquipmentList = ({
         
         <Divider />
         
-        {userRole === 'ADMIN' && (
-          <MenuItem onClick={() => handleDeleteClick(selectedEquipment)} sx={{ color: 'error.main' }}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>Delete Equipment</ListItemText>
-          </MenuItem>
-        )}
+        <MenuItem onClick={() => handleDeleteClick(selectedEquipment)} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <DeleteIcon fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText>Delete Equipment</ListItemText>
+        </MenuItem>
       </Menu>
 
       {/* Delete Confirmation Dialog */}
@@ -587,8 +474,7 @@ const EquipmentList = ({
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete equipment "{getEquipmentDisplayName(equipmentToDelete)}"? 
-            This action cannot be undone and will remove all associated data.
+            Are you sure you want to delete equipment "{equipmentToDelete?.hostname}"? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

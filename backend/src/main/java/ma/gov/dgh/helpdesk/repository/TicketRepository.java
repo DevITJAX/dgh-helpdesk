@@ -87,7 +87,10 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      * Find tickets with pagination and search
      */
     @Query("SELECT t FROM Ticket t WHERE " +
-           "(:search IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+           "(:search IS NULL OR " +
+           "LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(CAST(t.description AS string)) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(t.category) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
            "(:status IS NULL OR t.status = :status) AND " +
            "(:priority IS NULL OR t.priority = :priority) AND " +
            "(:category IS NULL OR t.category = :category) AND " +

@@ -79,7 +79,8 @@ const Dashboard = () => {
         );
       
       case 'USER':
-        console.log('Dashboard: Rendering EmployeeDashboard for user:', user.username);
+      case 'EMPLOYEE':
+        console.log('Dashboard: Rendering EmployeeDashboard for user:', user.username, 'with role:', user.role);
         return (
           <EmployeeDashboard 
             statistics={statistics} 

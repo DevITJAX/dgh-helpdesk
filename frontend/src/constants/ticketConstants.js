@@ -15,6 +15,21 @@ export const TICKET_STATUSES = {
   CANCELLED: 'CANCELLED'
 };
 
+// Ticket Category Values
+export const TICKET_CATEGORIES = {
+  HARDWARE: 'HARDWARE',
+  SOFTWARE: 'SOFTWARE',
+  NETWORK: 'NETWORK',
+  EMAIL: 'EMAIL',
+  PRINTER: 'PRINTER',
+  ACCESS: 'ACCESS',
+  REQUEST: 'REQUEST',
+  SECURITY: 'SECURITY',
+  PHONE: 'PHONE',
+  GENERAL: 'GENERAL',
+  OTHER: 'OTHER'
+};
+
 // Priority Colors for UI
 export const PRIORITY_COLORS = {
   [TICKET_PRIORITIES.LOW]: 'success',
@@ -49,6 +64,22 @@ export const STATUS_LABELS = {
   [TICKET_STATUSES.CANCELLED]: 'Cancelled'
 };
 
+// Category Labels for display
+export const CATEGORY_LABELS = {
+  [TICKET_CATEGORIES.HARDWARE]: 'Hardware Issue',
+  [TICKET_CATEGORIES.SOFTWARE]: 'Software Issue',
+  [TICKET_CATEGORIES.NETWORK]: 'Network Issue',
+  [TICKET_CATEGORIES.EMAIL]: 'Email Issue',
+  [TICKET_CATEGORIES.PRINTER]: 'Printer Issue',
+  [TICKET_CATEGORIES.ACCESS]: 'Access Issue',
+  [TICKET_CATEGORIES.REQUEST]: 'Request',
+  [TICKET_CATEGORIES.SECURITY]: 'Security Issue',
+  [TICKET_CATEGORIES.PHONE]: 'Phone Issue',
+  [TICKET_CATEGORIES.GENERAL]: 'General Support',
+  [TICKET_CATEGORIES.OTHER]: 'Other'
+};
+
 // Arrays for dropdowns
 export const PRIORITY_OPTIONS = Object.values(TICKET_PRIORITIES);
-export const STATUS_OPTIONS = Object.values(TICKET_STATUSES); 
+export const STATUS_OPTIONS = Object.values(TICKET_STATUSES);
+export const CATEGORY_OPTIONS = Object.values(TICKET_CATEGORIES); 

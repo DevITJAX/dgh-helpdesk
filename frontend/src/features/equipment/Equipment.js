@@ -15,6 +15,7 @@ import EquipmentForm from './components/EquipmentForm';
 import NetworkDiscovery from './components/NetworkDiscovery';
 import { equipmentService } from '../../services/equipmentService';
 import { useAuth } from '../../contexts/AuthContext';
+import PageLayout from '../../components/common/PageLayout';
 
 function TabPanel({ children, value, index, ...other }) {
   return (
@@ -216,16 +217,12 @@ const Equipment = () => {
   };
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Equipment Management
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage IT equipment inventory, network discovery, and asset tracking
-        </Typography>
-      </Box>
-
+    <PageLayout
+      title="Equipment Management"
+      subtitle="Manage IT equipment inventory, network discovery, and asset tracking"
+      loading={loading}
+      error={error}
+    >
       <Paper sx={{ width: '100%' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={tabValue} onChange={handleTabChange} aria-label="equipment management tabs">
@@ -295,7 +292,7 @@ const Equipment = () => {
           {success}
         </Alert>
       </Snackbar>
-    </Container>
+    </PageLayout>
   );
 };
 

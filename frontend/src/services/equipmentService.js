@@ -195,11 +195,101 @@ export const equipmentService = {
 
   getEquipmentStatistics: async () => {
     try {
+      // First try to get statistics from the backend API
       const response = await apiClient.get('/api/equipment/statistics');
-      return response.data;
+      const apiStats = response.data;
+      
+      // Check if the API returned meaningful data
+      if (apiStats && apiStats.totalEquipment > 0) {
+        console.log('EquipmentService: Using API statistics:', apiStats);
+        // Map backend field names to frontend expected names
+        return {
+          totalEquipment: apiStats.totalEquipment,
+          onlineCount: apiStats.onlineEquipment,
+          offlineCount: apiStats.offlineEquipment,
+          managedCount: apiStats.managedEquipment,
+          unmanagedCount: apiStats.totalEquipment - apiStats.managedEquipment,
+          typeDistribution: {},
+          statusDistribution: {},
+          locationDistribution: {},
+          manufacturerDistribution: {}
+        };
+      }
+      
+      // Fallback: Calculate statistics from actual equipment data
+      console.log('EquipmentService: API returned empty/mock data, calculating from equipment list...');
+      const allEquipmentResponse = await apiClient.get('/api/equipment');
+      const allEquipment = allEquipmentResponse.data.content || allEquipmentResponse.data || [];
+      
+      // Calculate real statistics
+      const totalEquipment = allEquipment.length;
+      const onlineCount = allEquipment.filter(equipment => equipment.status === 'ONLINE').length;
+      const offlineCount = allEquipment.filter(equipment => equipment.status === 'OFFLINE').length;
+      const managedCount = allEquipment.filter(equipment => equipment.isManaged === true).length;
+      const unmanagedCount = totalEquipment - managedCount;
+      
+      // Calculate type distribution
+      const typeCounts = {};
+      allEquipment.forEach(equipment => {
+        if (equipment.equipmentType) {
+          typeCounts[equipment.equipmentType] = (typeCounts[equipment.equipmentType] || 0) + 1;
+        }
+      });
+      
+      // Calculate status distribution
+      const statusCounts = {};
+      allEquipment.forEach(equipment => {
+        if (equipment.status) {
+          statusCounts[equipment.status] = (statusCounts[equipment.status] || 0) + 1;
+        }
+      });
+      
+      // Calculate location distribution
+      const locationCounts = {};
+      allEquipment.forEach(equipment => {
+        if (equipment.location) {
+          locationCounts[equipment.location] = (locationCounts[equipment.location] || 0) + 1;
+        }
+      });
+      
+      // Calculate manufacturer distribution
+      const manufacturerCounts = {};
+      allEquipment.forEach(equipment => {
+        if (equipment.manufacturer) {
+          manufacturerCounts[equipment.manufacturer] = (manufacturerCounts[equipment.manufacturer] || 0) + 1;
+        }
+      });
+      
+      const calculatedStats = {
+        totalEquipment,
+        onlineCount,
+        offlineCount,
+        managedCount,
+        unmanagedCount,
+        typeDistribution: typeCounts,
+        statusDistribution: statusCounts,
+        locationDistribution: locationCounts,
+        manufacturerDistribution: manufacturerCounts
+      };
+      
+      console.log('EquipmentService: Calculated statistics:', calculatedStats);
+      return calculatedStats;
+      
     } catch (error) {
       console.error('EquipmentService: Error fetching equipment statistics:', error);
-      throw error;
+      
+      // Final fallback: return basic structure with zeros
+      return {
+        totalEquipment: 0,
+        onlineCount: 0,
+        offlineCount: 0,
+        managedCount: 0,
+        unmanagedCount: 0,
+        typeDistribution: {},
+        statusDistribution: {},
+        locationDistribution: {},
+        manufacturerDistribution: {}
+      };
     }
   },
 

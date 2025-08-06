@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Grid,
@@ -7,54 +8,31 @@ import {
   Typography,
   Button,
   Alert,
-  Chip,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  CircularProgress,
-  Fab
+  CircularProgress
 } from '@mui/material';
 import {
   BugReport,
   Add,
   CheckCircle,
   Schedule,
-  PriorityHigh,
-  TrendingUp,
+  Computer,
   Person,
-  Notifications,
-  Book,
-  Lightbulb,
-  Message
+  Visibility
 } from '@mui/icons-material';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import CreateTicketForm from '../../components/forms/CreateTicketForm';
 
 const EmployeeDashboard = ({ statistics, loading, error }) => {
+  const navigate = useNavigate();
   const [myTickets, setMyTickets] = useState([]);
-  const [recentUpdates, setRecentUpdates] = useState([]);
-  const [knowledgeBaseRecommendations, setKnowledgeBaseRecommendations] = useState([]);
+  const [createFormOpen, setCreateFormOpen] = useState(false);
 
   // Mock data for demonstration - replace with actual API calls
   useEffect(() => {
     // Simulate API calls for employee-specific data
     setMyTickets([
-      { id: 1, title: 'Network connectivity issue', priority: 'HIGH', status: 'IN_PROGRESS', createdAt: '2024-01-15', lastUpdate: '2024-01-15 14:30' },
-      { id: 2, title: 'Printer not working', priority: 'MEDIUM', status: 'OPEN', createdAt: '2024-01-14', lastUpdate: '2024-01-14 16:45' },
-      { id: 3, title: 'Software installation request', priority: 'LOW', status: 'RESOLVED', createdAt: '2024-01-13', lastUpdate: '2024-01-13 11:20' },
-    ]);
-
-    setRecentUpdates([
-      { id: 1, ticketId: 1, message: 'Technician Ahmed Benali has started working on your ticket', timestamp: '2024-01-15 14:30', type: 'status_change' },
-      { id: 2, ticketId: 2, message: 'Your ticket has been assigned to technician Fatima Zahra', timestamp: '2024-01-14 16:45', type: 'assignment' },
-      { id: 3, ticketId: 3, message: 'Your ticket has been resolved successfully', timestamp: '2024-01-13 11:20', type: 'resolution' },
-    ]);
-
-    setKnowledgeBaseRecommendations([
-      { id: 1, title: 'How to reset your password', category: 'ACCESS', relevance: 95 },
-      { id: 2, title: 'Connecting to office WiFi', category: 'NETWORK', relevance: 88 },
-      { id: 3, title: 'Installing approved software', category: 'SOFTWARE', relevance: 82 },
+      { id: 1, title: 'Network connectivity issue', status: 'IN_PROGRESS', createdAt: '2024-01-15' },
+      { id: 2, title: 'Printer not working', status: 'OPEN', createdAt: '2024-01-14' },
+      { id: 3, title: 'Software installation request', status: 'RESOLVED', createdAt: '2024-01-13' },
     ]);
   }, []);
 
@@ -91,42 +69,55 @@ const EmployeeDashboard = ({ statistics, loading, error }) => {
     </Card>
   );
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'CRITICAL': return 'error';
-      case 'HIGH': return 'warning';
-      case 'MEDIUM': return 'info';
-      case 'LOW': return 'success';
-      default: return 'default';
-    }
+  const QuickActionCard = ({ title, description, icon, onClick, color = 'primary.main' }) => (
+    <Card 
+      sx={{ 
+        height: '100%', 
+        cursor: 'pointer',
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: 3
+        }
+      }}
+      onClick={onClick}
+    >
+      <CardContent sx={{ textAlign: 'center', py: 3 }}>
+        <Box
+          sx={{
+            backgroundColor: color,
+            borderRadius: '50%',
+            p: 2,
+            mx: 'auto',
+            mb: 2,
+            width: 64,
+            height: 64,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          {icon}
+        </Box>
+        <Typography variant="h6" component="div" sx={{ mb: 1 }}>
+          {title}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {description}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+
+  const handleCreateTicket = () => {
+    setCreateFormOpen(true);
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'OPEN': return 'error';
-      case 'IN_PROGRESS': return 'warning';
-      case 'WAITING': return 'info';
-      case 'RESOLVED': return 'success';
-      case 'CLOSED': return 'default';
-      default: return 'default';
-    }
+  const handleTicketCreated = (newTicket) => {
+    // Add the new ticket to the list
+    setMyTickets([newTicket, ...myTickets]);
+    setCreateFormOpen(false);
   };
-
-  const getUpdateIcon = (type) => {
-    switch (type) {
-      case 'status_change': return <Schedule color="warning" />;
-      case 'assignment': return <Person color="info" />;
-      case 'resolution': return <CheckCircle color="success" />;
-      case 'comment': return <Message color="primary" />;
-      default: return <Notifications color="default" />;
-    }
-  };
-
-  const ticketStatusData = [
-    { name: 'Open', value: myTickets.filter(t => t.status === 'OPEN').length, color: '#f44336' },
-    { name: 'In Progress', value: myTickets.filter(t => t.status === 'IN_PROGRESS').length, color: '#ff9800' },
-    { name: 'Resolved', value: myTickets.filter(t => t.status === 'RESOLVED').length, color: '#4caf50' },
-  ];
 
   if (loading) {
     return (
@@ -144,264 +135,112 @@ const EmployeeDashboard = ({ statistics, loading, error }) => {
         </Alert>
       )}
 
-      {/* Header with Quick Ticket Creation */}
+      {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
           My Dashboard
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => {/* Navigate to create ticket */}}
-        >
-          Submit New Request
-        </Button>
       </Box>
 
-      <Grid container spacing={3}>
-        {/* My Ticket Status Overview */}
+      {/* Statistics Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="My Open Tickets"
-            value={myTickets.filter(t => t.status === 'OPEN').length}
+            title="Total Tickets"
+            value={statistics?.ticketStatistics?.totalTickets || 0}
             icon={<BugReport sx={{ color: 'white' }} />}
-            color="error.main"
-            subtitle="Tickets awaiting action"
+            color="primary.main"
+            subtitle="All tickets in the system"
           />
         </Grid>
         
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="In Progress"
-            value={myTickets.filter(t => t.status === 'IN_PROGRESS').length}
+            title="My Tickets"
+            value={myTickets.length}
+            icon={<Person sx={{ color: 'white' }} />}
+            color="info.main"
+            subtitle="My submitted tickets"
+          />
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title="Open Tickets"
+            value={myTickets.filter(t => t.status === 'OPEN').length}
             icon={<Schedule sx={{ color: 'white' }} />}
             color="warning.main"
-            subtitle="Being worked on"
+            subtitle="Awaiting resolution"
           />
         </Grid>
         
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="Resolved"
+            title="Resolved Tickets"
             value={myTickets.filter(t => t.status === 'RESOLVED').length}
             icon={<CheckCircle sx={{ color: 'white' }} />}
             color="success.main"
             subtitle="Successfully completed"
           />
         </Grid>
-        
+      </Grid>
+
+      {/* Equipment Card */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="Total Requests"
-            value={myTickets.length}
-            icon={<TrendingUp sx={{ color: 'white' }} />}
-            color="info.main"
-            subtitle="All my support requests"
+            title="Total Equipment"
+            value={statistics?.equipmentStatistics?.totalEquipment || 0}
+            icon={<Computer sx={{ color: 'white' }} />}
+            color="secondary.main"
+            subtitle="Tracked IT assets"
           />
-        </Grid>
-
-        {/* Ticket Status Distribution */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                My Ticket Status Overview
-              </Typography>
-              {myTickets.length > 0 ? (
-                <Box sx={{ height: 300 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={ticketStatusData}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        dataKey="value"
-                        label={({ name, value }) => `${name}: ${value}`}
-                      >
-                        {ticketStatusData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                </Box>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 3 }}>
-                  <BugReport sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
-                  <Typography variant="body1" color="text.secondary">
-                    No tickets yet. Submit your first support request!
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Recent Updates */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Recent Updates
-              </Typography>
-              {recentUpdates.length > 0 ? (
-                <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-                  {recentUpdates.map((update, index) => (
-                    <React.Fragment key={update.id}>
-                      <ListItem>
-                        <ListItemIcon>
-                          {getUpdateIcon(update.type)}
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                              {update.message}
-                            </Typography>
-                          }
-                          secondary={
-                            <Typography variant="body2" color="text.secondary">
-                              {update.timestamp}
-                            </Typography>
-                          }
-                        />
-                      </ListItem>
-                      {index < recentUpdates.length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 3 }}>
-                  <Notifications sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
-                  <Typography variant="body1" color="text.secondary">
-                    No recent updates
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Knowledge Base Recommendations */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Knowledge Base Recommendations
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Based on your recent tickets, you might find these helpful:
-              </Typography>
-              <Grid container spacing={2}>
-                {knowledgeBaseRecommendations.map((article) => (
-                  <Grid item xs={12} sm={6} md={4} key={article.id}>
-                    <Card variant="outlined" sx={{ height: '100%' }}>
-                      <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                          <Book sx={{ mr: 1, color: 'primary.main' }} />
-                          <Chip 
-                            label={article.category} 
-                            size="small" 
-                            color="primary"
-                            variant="outlined"
-                          />
-                        </Box>
-                        <Typography variant="body1" sx={{ fontWeight: 'medium', mb: 1 }}>
-                          {article.title}
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Typography variant="body2" color="text.secondary">
-                            {article.relevance}% relevant
-                          </Typography>
-                          <Button
-                            size="small"
-                            startIcon={<Lightbulb />}
-                            onClick={() => {/* Navigate to knowledge base article */}}
-                          >
-                            Read More
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* My Recent Tickets */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                My Recent Tickets
-              </Typography>
-              {myTickets.length > 0 ? (
-                <List>
-                  {myTickets.map((ticket, index) => (
-                    <React.Fragment key={ticket.id}>
-                      <ListItem>
-                        <ListItemIcon>
-                          <PriorityHigh color={getPriorityColor(ticket.priority)} />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                {ticket.title}
-                              </Typography>
-                              <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Chip 
-                                  label={ticket.priority} 
-                                  size="small" 
-                                  color={getPriorityColor(ticket.priority)}
-                                />
-                                <Chip 
-                                  label={ticket.status} 
-                                  size="small" 
-                                  color={getStatusColor(ticket.status)}
-                                />
-                              </Box>
-                            </Box>
-                          }
-                          secondary={
-                            <Typography variant="body2" color="text.secondary">
-                              Created: {ticket.createdAt} • Last Update: {ticket.lastUpdate}
-                            </Typography>
-                          }
-                        />
-                      </ListItem>
-                      {index < myTickets.length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 3 }}>
-                  <BugReport sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
-                  <Typography variant="body1" color="text.secondary">
-                    No tickets yet. Submit your first support request!
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
         </Grid>
       </Grid>
 
-      {/* Floating Action Button for Quick Ticket Creation */}
-      <Fab
-        color="primary"
-        aria-label="add"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-        }}
-        onClick={() => {/* Navigate to create ticket */}}
-      >
-        <Add />
-      </Fab>
+      {/* Quick Actions */}
+      <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 'bold' }}>
+        Quick Actions
+      </Typography>
+      
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6} md={4}>
+          <QuickActionCard
+            title="Create Ticket"
+            description="Submit a new support request"
+            icon={<Add sx={{ color: 'white', fontSize: 32 }} />}
+            color="primary.main"
+            onClick={handleCreateTicket}
+          />
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={4}>
+          <QuickActionCard
+            title="View Tickets"
+            description="See all your tickets and their status"
+            icon={<Visibility sx={{ color: 'white', fontSize: 32 }} />}
+            color="info.main"
+            onClick={() => navigate('/tickets')}
+          />
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={4}>
+          <QuickActionCard
+            title="My Profile"
+            description="View and edit your profile information"
+            icon={<Person sx={{ color: 'white', fontSize: 32 }} />}
+            color="success.main"
+            onClick={() => navigate('/profile')}
+          />
+        </Grid>
+      </Grid>
+
+      {/* Create Ticket Form - Same as in Ticket Management */}
+      <CreateTicketForm
+        open={createFormOpen}
+        onClose={() => setCreateFormOpen(false)}
+        onTicketCreated={handleTicketCreated}
+      />
     </Box>
   );
 };

@@ -52,6 +52,7 @@ public class DevelopmentSecurityConfig {
                 .requestMatchers("/api/users/profile").permitAll()  // Temporarily allow profile updates for testing
                 .requestMatchers("/api/tickets/samples/create").permitAll()  // Allow ticket creation for testing
                 .requestMatchers("/api/tickets/**").permitAll()  // Temporarily allow all ticket endpoints for testing
+                .requestMatchers("/api/equipment/**").permitAll()  // Temporarily allow all equipment endpoints for testing
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )

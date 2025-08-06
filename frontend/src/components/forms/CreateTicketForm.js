@@ -14,36 +14,20 @@ import {
   CircularProgress
 } from '@mui/material';
 import { ticketService } from '../../services/ticketService';
-import { userService } from '../../services/userService';
-import { PRIORITY_OPTIONS } from '../../constants/ticketConstants';
+import { PRIORITY_OPTIONS, PRIORITY_LABELS, CATEGORY_OPTIONS, CATEGORY_LABELS } from '../../constants/ticketConstants';
 
 const CreateTicketForm = ({ open, onClose, onTicketCreated }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     priority: 'MEDIUM',
-    assignedTo: ''
+    category: 'GENERAL'
   });
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const priorities = PRIORITY_OPTIONS;
-
-  useEffect(() => {
-    if (open) {
-      loadUsers();
-    }
-  }, [open]);
-
-  const loadUsers = async () => {
-    try {
-      const usersData = await userService.getUsers();
-      setUsers(usersData.filter(u => u.role === 'TECHNICIAN' || u.role === 'ADMIN'));
-    } catch (err) {
-      console.error('Error loading users:', err);
-    }
-  };
+  const categories = CATEGORY_OPTIONS;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,7 +56,7 @@ const CreateTicketForm = ({ open, onClose, onTicketCreated }) => {
       title: '',
       description: '',
       priority: 'MEDIUM',
-      assignedTo: ''
+      category: 'GENERAL'
     });
     setError(null);
     onClose();
@@ -112,6 +96,22 @@ const CreateTicketForm = ({ open, onClose, onTicketCreated }) => {
           />
 
           <FormControl fullWidth margin="normal">
+            <InputLabel>Category</InputLabel>
+            <Select
+              value={formData.category}
+              label="Category"
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              disabled={loading}
+            >
+              {categories.map(category => (
+                <MenuItem key={category} value={category}>
+                  {CATEGORY_LABELS[category]}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
             <InputLabel>Priority</InputLabel>
             <Select
               value={formData.priority}
@@ -120,23 +120,8 @@ const CreateTicketForm = ({ open, onClose, onTicketCreated }) => {
               disabled={loading}
             >
               {priorities.map(priority => (
-                <MenuItem key={priority} value={priority}>{priority}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Assign To (Optional)</InputLabel>
-            <Select
-              value={formData.assignedTo}
-              label="Assign To (Optional)"
-              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-              disabled={loading}
-            >
-              <MenuItem value="">Unassigned</MenuItem>
-              {users.map(user => (
-                <MenuItem key={user.id} value={user.id}>
-                  {user.displayName || user.username}
+                <MenuItem key={priority} value={priority}>
+                  {PRIORITY_LABELS[priority]}
                 </MenuItem>
               ))}
             </Select>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Grid,
@@ -26,8 +27,11 @@ import {
   TrendingUp
 } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useAuth } from '../../contexts/AuthContext';
 
 const TechnicianDashboard = ({ statistics, loading, error }) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [myTickets, setMyTickets] = useState([]);
   const [slaAlerts, setSlaAlerts] = useState([]);
   const [recentAssignments, setRecentAssignments] = useState([]);
@@ -68,6 +72,16 @@ const TechnicianDashboard = ({ statistics, loading, error }) => {
       ]
     });
   }, []);
+
+  // Handle navigation to tickets with technician filter
+  const handleViewMyTickets = () => {
+    // Navigate to tickets page with assignedTo filter set to current technician
+    const searchParams = new URLSearchParams();
+    if (user?.id) {
+      searchParams.set('assignedTo', user.id);
+    }
+    navigate(`/tickets?${searchParams.toString()}`);
+  };
 
   const StatCard = ({ title, value, icon, color = 'primary.main', subtitle, trend }) => (
     <Card sx={{ height: '100%' }}>
@@ -155,7 +169,7 @@ const TechnicianDashboard = ({ statistics, loading, error }) => {
         <Button
           variant="contained"
           startIcon={<Assignment />}
-          onClick={() => {/* Navigate to my tickets */}}
+          onClick={handleViewMyTickets}
         >
           View My Tickets
         </Button>
