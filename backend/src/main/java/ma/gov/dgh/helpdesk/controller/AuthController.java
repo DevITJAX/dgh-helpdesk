@@ -19,6 +19,7 @@ import ma.gov.dgh.helpdesk.security.JwtTokenProvider;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.List;
+import ma.gov.dgh.helpdesk.repository.UserRepository;
 
 /**
  * REST Controller for Authentication operations
@@ -29,10 +30,12 @@ import java.util.List;
 public class AuthController {
     
     private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
     
     @Autowired
-    public AuthController(AuthenticationManager authenticationManager) {
+    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository) {
         this.authenticationManager = authenticationManager;
+        this.userRepository = userRepository;
     }
     
     /**
@@ -70,23 +73,37 @@ public class AuthController {
                 role = userDetails.getRole();
             } else if (principal instanceof org.springframework.security.core.userdetails.User) {
                 org.springframework.security.core.userdetails.User springUser = (org.springframework.security.core.userdetails.User) principal;
-                userId = -1L; // Dummy ID for in-memory users
                 username = springUser.getUsername();
-                fullName = username.equals("admin") ? "Admin User" : 
-                          username.equals("user") ? "Regular User" : 
-                          username.equals("helpdesk-admin") ? "Helpdesk Admin" : "User";
-                email = username + "@localhost";
-                department = "IT";
                 
-                // Map Spring Security roles to UserRole enum values
-                if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
-                    role = "ADMIN";
-                } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_TECHNICIAN"))) {
-                    role = "TECHNICIAN";
-                } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_EMPLOYEE"))) {
-                    role = "EMPLOYEE";
+                // Try to fetch real user data from database
+                User dbUser = userRepository.findByLdapUsername(username).orElse(null);
+                
+                if (dbUser != null) {
+                    // Use real database user data
+                    userId = dbUser.getId();
+                    fullName = dbUser.getFullName();
+                    email = dbUser.getEmail();
+                    department = dbUser.getDepartment();
+                    role = dbUser.getRole().name();
                 } else {
-                    role = "EMPLOYEE"; // Default to EMPLOYEE for regular users
+                    // Fallback to in-memory user data
+                    userId = -1L; // Dummy ID for in-memory users
+                    fullName = username.equals("admin") ? "Admin User" : 
+                              username.equals("user") ? "Regular User" : 
+                              username.equals("helpdesk-admin") ? "Helpdesk Admin" : "User";
+                    email = username + "@localhost";
+                    department = "IT";
+                    
+                    // Map Spring Security roles to UserRole enum values
+                    if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+                        role = "ADMIN";
+                    } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_TECHNICIAN"))) {
+                        role = "TECHNICIAN";
+                    } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_EMPLOYEE"))) {
+                        role = "EMPLOYEE";
+                    } else {
+                        role = "EMPLOYEE"; // Default to EMPLOYEE for regular users
+                    }
                 }
             } else {
                 throw new RuntimeException("Unknown principal type: " + principal.getClass());
@@ -102,7 +119,7 @@ public class AuthController {
                 token,
                 "Login successful"
             );
-            System.out.println("Login successful for user: " + username);
+            System.out.println("Login successful for user: " + username + " with ID: " + userId);
             return ResponseEntity.ok(response);
 
         } catch (BadCredentialsException e) {
@@ -154,23 +171,38 @@ public class AuthController {
             role = userDetails.getRole();
         } else if (principal instanceof org.springframework.security.core.userdetails.User) {
             org.springframework.security.core.userdetails.User springUser = (org.springframework.security.core.userdetails.User) principal;
-            userId = -1L; // Dummy ID for in-memory users
             username = springUser.getUsername();
-            fullName = username.equals("admin") ? "Admin User" : 
-                      username.equals("user") ? "Regular User" : 
-                      username.equals("helpdesk-admin") ? "Helpdesk Admin" : "User";
-            email = username + "@localhost";
-            department = "IT";
             
-            // Map Spring Security roles to UserRole enum values
-            if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
-                role = "ADMIN";
-            } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_TECHNICIAN"))) {
-                role = "TECHNICIAN";
-            } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_EMPLOYEE"))) {
-                role = "EMPLOYEE";
+            // Try to fetch real user data from database
+            User dbUser = userRepository.findByLdapUsername(username).orElse(null);
+            
+            if (dbUser != null) {
+                // Use real database user data
+                userId = dbUser.getId();
+                fullName = dbUser.getFullName();
+                email = dbUser.getEmail();
+                department = dbUser.getDepartment();
+                role = dbUser.getRole().name();
             } else {
-                role = "EMPLOYEE"; // Default to EMPLOYEE for regular users
+                // Fallback to in-memory user data
+                userId = -1L; // Dummy ID for in-memory users
+                username = springUser.getUsername();
+                fullName = username.equals("admin") ? "Admin User" : 
+                          username.equals("user") ? "Regular User" : 
+                          username.equals("helpdesk-admin") ? "Helpdesk Admin" : "User";
+                email = username + "@localhost";
+                department = "IT";
+                
+                // Map Spring Security roles to UserRole enum values
+                if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+                    role = "ADMIN";
+                } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_TECHNICIAN"))) {
+                    role = "TECHNICIAN";
+                } else if (springUser.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_EMPLOYEE"))) {
+                    role = "EMPLOYEE";
+                } else {
+                    role = "EMPLOYEE"; // Default to EMPLOYEE for regular users
+                }
             }
         } else {
             System.out.println("Unknown principal type: " + principal.getClass().getName());
@@ -277,7 +309,8 @@ public class AuthController {
         private String role;
         private String token;
         private String message;
-        
+        private Boolean isActive;
+
         public LoginResponse(Long userId, String username, String fullName, String email, 
                            String department, String role, String token, String message) {
             this.userId = userId;
@@ -288,9 +321,22 @@ public class AuthController {
             this.role = role;
             this.token = token;
             this.message = message;
+            this.isActive = true; // Default to true for authenticated users
         }
-        
-        // Getters
+
+        public LoginResponse(Long userId, String username, String fullName, String email, 
+                           String department, String role, String token, String message, Boolean isActive) {
+            this.userId = userId;
+            this.username = username;
+            this.fullName = fullName;
+            this.email = email;
+            this.department = department;
+            this.role = role;
+            this.token = token;
+            this.message = message;
+            this.isActive = isActive;
+        }
+
         public Long getUserId() { return userId; }
         public String getUsername() { return username; }
         public String getFullName() { return fullName; }
@@ -299,6 +345,7 @@ public class AuthController {
         public String getRole() { return role; }
         public String getToken() { return token; }
         public String getMessage() { return message; }
+        public Boolean getIsActive() { return isActive; }
     }
     
     public static class LogoutResponse {
@@ -320,6 +367,7 @@ public class AuthController {
         private String email;
         private String department;
         private String role;
+        private Boolean isActive;
         
         public UserInfoResponse(Long userId, String username, String fullName, String email, 
                               String department, String role) {
@@ -329,8 +377,20 @@ public class AuthController {
             this.email = email;
             this.department = department;
             this.role = role;
+            this.isActive = true; // Default to true for authenticated users
         }
         
+        public UserInfoResponse(Long userId, String username, String fullName, String email, 
+                              String department, String role, Boolean isActive) {
+            this.userId = userId;
+            this.username = username;
+            this.fullName = fullName;
+            this.email = email;
+            this.department = department;
+            this.role = role;
+            this.isActive = isActive;
+        }
+
         // Getters
         public Long getUserId() { return userId; }
         public String getUsername() { return username; }
@@ -338,6 +398,7 @@ public class AuthController {
         public String getEmail() { return email; }
         public String getDepartment() { return department; }
         public String getRole() { return role; }
+        public Boolean getIsActive() { return isActive; }
     }
     
     public static class AuthCheckResponse {

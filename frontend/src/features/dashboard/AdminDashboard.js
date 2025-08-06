@@ -59,9 +59,13 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import activityLogService from '../../services/activityLogService';
 import UserForm from '../users/components/UserForm';
+import dashboardService from '../../services/dashboardService';
+import { DashboardStatistics } from '../../types/dashboard.ts';
+import { useAuth } from '../../contexts/AuthContext';
 
 const AdminDashboard = ({ statistics, loading, error }) => {
   const navigate = useNavigate();
+  const { user } = useAuth(); // Add this line to get user from auth context
   const [recentTickets, setRecentTickets] = useState([]);
   const [technicianPerformance, setTechnicianPerformance] = useState([]);
   const [equipmentStatus, setEquipmentStatus] = useState({ active: 0, inactive: 0, critical: 0 });
@@ -116,10 +120,24 @@ const AdminDashboard = ({ statistics, loading, error }) => {
     }
   }, [activeTab, logFilter, logSearch, logPage]);
 
+  // Redirect non-admin users away from activity log tab
+  useEffect(() => {
+    if (activeTab === 1 && (!user || user.role !== 'ADMIN')) {
+      setActiveTab(0);
+    }
+  }, [activeTab, user]);
+
   const loadActivityLogs = async () => {
     try {
       setLogLoading(true);
       setLogError(null);
+
+      // Check if user has ADMIN role
+      if (!user || user.role !== 'ADMIN') {
+        setLogError('Access denied: Activity logs are only available to administrators.');
+        setActivityLog([]);
+        return;
+      }
 
       const params = {
         page: logPage,
@@ -135,7 +153,18 @@ const AdminDashboard = ({ statistics, loading, error }) => {
       setLogTotalElements(response.totalElements);
     } catch (err) {
       console.error('Error loading activity logs:', err);
-      setLogError('Failed to load activity logs');
+      
+      // Handle specific error cases
+      if (err.response?.status === 403) {
+        setLogError('Access denied: You do not have permission to view activity logs.');
+      } else if (err.response?.status === 500) {
+        setLogError('Server error: Activity logs service is temporarily unavailable.');
+      } else if (err.message?.includes('Network Error')) {
+        setLogError('Network error: Cannot connect to the server.');
+      } else {
+        setLogError('Failed to load activity logs: ' + (err.message || 'Unknown error'));
+      }
+      
       // Fallback to mock data for demonstration
       setActivityLog([
         {
@@ -223,6 +252,31 @@ const AdminDashboard = ({ statistics, loading, error }) => {
       setLogLoading(false);
     }
   };
+
+  // Replace mock data useEffect with real API call for recent tickets
+  useEffect(() => {
+    const fetchRecentTickets = async () => {
+      try {
+        const tickets = await dashboardService.getRecentTickets(5);
+        setRecentTickets(tickets);
+      } catch (err) {
+        setRecentTickets([]);
+      }
+    };
+    fetchRecentTickets();
+  }, []);
+
+  // Remove mock data for technicianPerformance and equipmentStatus, or replace with real API calls if available
+  // useEffect(() => {
+  //   // Simulate API calls for additional dashboard data
+  //   setTechnicianPerformance([
+  //     { name: 'Ahmed Benali', resolved: 45, pending: 8, slaCompliance: 92 },
+  //     { name: 'Fatima Zahra', resolved: 38, pending: 12, slaCompliance: 88 },
+  //     { name: 'Mohammed Alami', resolved: 52, pending: 5, slaCompliance: 95 },
+  //   ]);
+
+  //   setEquipmentStatus({ active: 156, inactive: 12, critical: 3 });
+  // }, []);
 
   const StatCard = ({ title, value, icon, color = 'primary.main', subtitle, trend }) => (
     <Card sx={{ height: '100%', position: 'relative' }}>
@@ -550,7 +604,7 @@ const AdminDashboard = ({ statistics, loading, error }) => {
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
           <Tab label="Dashboard Overview" />
-          <Tab label="Activity Log" />
+          {user?.role === 'ADMIN' && <Tab label="Activity Log" />}
         </Tabs>
       </Box>
 
@@ -642,21 +696,21 @@ const AdminDashboard = ({ statistics, loading, error }) => {
                   <Grid item xs={4}>
                     <Box sx={{ textAlign: 'center' }}>
                       <CheckCircle sx={{ fontSize: 40, color: 'success.main' }} />
-                      <Typography variant="h4">{equipmentStatus.active}</Typography>
+                      <Typography variant="h4">{statistics?.equipmentStatistics?.onlineEquipment ?? 0}</Typography>
                       <Typography variant="body2" color="text.secondary">Active</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={4}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Schedule sx={{ fontSize: 40, color: 'warning.main' }} />
-                      <Typography variant="h4">{equipmentStatus.inactive}</Typography>
+                      <Typography variant="h4">{statistics?.equipmentStatistics?.offlineEquipment ?? 0}</Typography>
                       <Typography variant="body2" color="text.secondary">Inactive</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={4}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Warning sx={{ fontSize: 40, color: 'error.main' }} />
-                      <Typography variant="h4">{equipmentStatus.critical}</Typography>
+                      <Typography variant="h4">0</Typography>
                       <Typography variant="body2" color="text.secondary">Critical</Typography>
                     </Box>
                   </Grid>
@@ -667,22 +721,15 @@ const AdminDashboard = ({ statistics, loading, error }) => {
 
           {/* Technician Performance */}
           <Grid item xs={12} md={6}>
-            <Card>
+            <Card sx={{ opacity: 0.5 }}>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   Technician Performance
                 </Typography>
-                <Box sx={{ height: 300 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={technicianPerformance}>
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <RechartsTooltip />
-                      <Legend />
-                      <Bar dataKey="resolved" fill="#4caf50" name="Resolved" />
-                      <Bar dataKey="pending" fill="#ff9800" name="Pending" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Typography variant="body1" color="text.secondary">
+                    Coming soon: Real technician performance data
+                  </Typography>
                 </Box>
               </CardContent>
             </Card>
@@ -723,7 +770,7 @@ const AdminDashboard = ({ statistics, loading, error }) => {
                           secondary={
                             <Box>
                               <Typography variant="body2" color="text.secondary">
-                                Assigned to: {ticket.assignedTo}
+                                Assigned to: {ticket.assignedTo ? (ticket.assignedTo.fullName || ticket.assignedTo.ldapUsername || ticket.assignedTo.email) : '-'}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
                                 Status: {ticket.status} • Created: {ticket.createdAt}

@@ -1,8 +1,13 @@
 import apiClient from './apiClient';
+import { DashboardStatistics } from '../types/dashboard.ts';
 
 const API_BASE_URL = '/api/dashboard';
 
 const dashboardService = {
+  /**
+   * Fetch overall dashboard statistics
+   * @returns {Promise<DashboardStatistics>}
+   */
   getStatistics: async () => {
     try {
       console.log('DashboardService: Fetching statistics...');
@@ -109,6 +114,23 @@ const dashboardService = {
       return response.data;
     } catch (error) {
       console.error('DashboardService: Error fetching technician recent activity:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch recent tickets for dashboard
+   * @param {number} limit
+   * @returns {Promise<any[]>}
+   */
+  getRecentTickets: async (limit = 5) => {
+    try {
+      const response = await apiClient.get('/api/tickets', {
+        params: { limit, sort: 'createdAt,desc' },
+      });
+      // If paginated, return content; else, return array
+      return response.data.content || response.data;
+    } catch (error) {
       throw error;
     }
   }

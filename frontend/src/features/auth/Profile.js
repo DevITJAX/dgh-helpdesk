@@ -80,8 +80,8 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
-    if (!user?.id) {
-      setError('User ID not found');
+    if (!user?.userId && !user?.id) {
+      setError('User information not available');
       return;
     }
 
@@ -290,7 +290,7 @@ const Profile = () => {
                   User ID
                 </Typography>
                 <Typography variant="body2" fontFamily="monospace">
-                  {user?.id || 'N/A'}
+                  {user?.userId || user?.id || 'N/A'}
                 </Typography>
               </Box>
               

@@ -73,28 +73,28 @@ const TechnicianEquipmentView = () => {
     type: 'MAINTENANCE'
   });
 
-  useEffect(() => {
-    const loadEquipment = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Load equipment for technician's area
-        const data = await equipmentService.getEquipmentByTechnicianArea(user?.id);
-        setEquipment(Array.isArray(data) ? data : 
-                    (data?.content ? data.content : []));
-      } catch (err) {
-        setError('Failed to load equipment data');
-        console.error('Error loading equipment:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?.id) {
-      loadEquipment();
+  const loadEquipmentData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Get equipment for the technician's area
+      const data = await equipmentService.getEquipmentByTechnicianArea(user?.userId || user?.id);
+      setEquipment(data);
+    } catch (err) {
+      console.error('Error loading equipment data:', err);
+      setError('Failed to load equipment data');
+    } finally {
+      setLoading(false);
     }
-  }, [user?.id]);
+  };
+
+  // Load equipment data when component mounts or user changes
+  useEffect(() => {
+    if (user?.userId || user?.id) {
+      loadEquipmentData();
+    }
+  }, [user?.userId, user?.id]);
 
   const handleDialogOpen = (type, equipment = null) => {
     setDialogType(type);

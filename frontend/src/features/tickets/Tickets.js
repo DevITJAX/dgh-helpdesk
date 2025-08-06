@@ -93,6 +93,7 @@ const Tickets = () => {
   const [reopenData, setReopenData] = useState({
     reason: ''
   });
+  const [totalCount, setTotalCount] = useState(0);
 
   const { user } = useAuth();
 
@@ -189,6 +190,10 @@ const Tickets = () => {
     if (filters.createdBy && ticket.createdBy?.id !== filters.createdBy) return false;
     return true;
   });
+
+  // Determine which tickets to show based on tab
+  const isAssignedTab = (tabValue === 0 || user?.role !== 'TECHNICIAN');
+  const currentTickets = isAssignedTab ? filteredTickets : filteredUnassignedTickets;
 
   // Handle dialog operations
   const handleDialogOpen = (type, ticket = null) => {
@@ -305,6 +310,32 @@ const Tickets = () => {
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
+
+  // Update fetch logic to always use backend pagination
+  useEffect(() => {
+    const fetchTickets = async () => {
+      setLoading(true);
+      let params = { page, size: rowsPerPage };
+      let ticketsData;
+      if (user?.role === 'TECHNICIAN') {
+        ticketsData = await ticketService.getTechnicianTickets(user.id, params);
+        if (TECHNICIAN_PERMISSIONS.viewUnassignedTickets) {
+          const unassignedData = await ticketService.getUnassignedTicketsWithFilters(params);
+          setUnassignedTickets(Array.isArray(unassignedData) ? unassignedData : (unassignedData?.content ? unassignedData.content : []));
+        }
+      } else if (user?.role === 'ADMIN') {
+        ticketsData = await ticketService.getTickets(params);
+      } else {
+        ticketsData = await ticketService.getTickets({ ...params, createdBy: user.id });
+      }
+      // Support both array and paginated response
+      let ticketsArray = Array.isArray(ticketsData) ? ticketsData : (ticketsData?.content ? ticketsData.content : (ticketsData?.data ? ticketsData.data : []));
+      setTickets(ticketsArray);
+      setTotalCount(ticketsData?.totalElements || ticketsArray.length);
+      setLoading(false);
+    };
+    if (user) fetchTickets();
+  }, [user, page, rowsPerPage, filters, tabValue]);
 
   // Get priority icon
   const getPriorityIcon = (priority) => {
@@ -495,8 +526,7 @@ const Tickets = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {(tabValue === 0 || user?.role !== 'TECHNICIAN') ? 
-                filteredTickets.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((ticket) => (
+              {currentTickets.map((ticket) => (
                   <TableRow key={ticket.id}>
                     <TableCell>{ticket.title}</TableCell>
                     <TableCell>
@@ -531,16 +561,24 @@ const Tickets = () => {
                           </IconButton>
                         </Tooltip>
                         
-                        {/* Only show edit for own tickets or if admin */}
-                        {(user?.role === 'ADMIN' || ticket.assignedTo?.id === user?.id) && (
-                          <Tooltip title="Edit Ticket">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDialogOpen('edit', ticket)}
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
+                        {(user?.role === 'ADMIN' || ticket.assignedTo?.id === (user?.userId || user?.id)) && (
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDialogOpen('edit', ticket)}
+                            color="primary"
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        )}
+                        
+                        {user?.role === 'TECHNICIAN' && ticket.assignedTo?.id === (user?.userId || user?.id) && (
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDialogOpen('escalate', ticket)}
+                            color="secondary"
+                          >
+                            <WarningAmber />
+                          </IconButton>
                         )}
 
                         {/* Technician-specific actions - only for their own tickets */}
@@ -618,66 +656,15 @@ const Tickets = () => {
                       </Box>
                     </TableCell>
                   </TableRow>
-                )) : 
-                // Unassigned tickets table
-                filteredUnassignedTickets.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((ticket) => (
-                  <TableRow key={ticket.id}>
-                    <TableCell>{ticket.title}</TableCell>
-                    <TableCell>
-                      <Chip 
-                        icon={getPriorityIcon(ticket.priority)}
-                        label={PRIORITY_LABELS[ticket.priority] || ticket.priority} 
-                        color={getPriorityColor(ticket.priority)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={STATUS_LABELS[ticket.status] || ticket.status} 
-                        color={getStatusColor(ticket.status)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{ticket.category}</TableCell>
-                    <TableCell>{ticket.createdBy?.fullName || ticket.createdBy?.name || 'Unknown'}</TableCell>
-                    <TableCell>Unassigned</TableCell>
-                    <TableCell>
-                      {new Date(ticket.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Tooltip title="View Details">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDialogOpen('view', ticket)}
-                          >
-                            <ViewIcon />
-                          </IconButton>
-                        </Tooltip>
-                        
-                        {TECHNICIAN_PERMISSIONS.assignTicketsToSelf && (
-                          <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<AssignmentIcon />}
-                            onClick={() => handleSelfAssign(ticket.id)}
-                          >
-                            Assign to Me
-                          </Button>
-                        )}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))
-              }
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
         
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[5, 10, 25, 50]}
           component="div"
-          count={tabValue === 0 || user?.role !== 'TECHNICIAN' ? filteredTickets.length : filteredUnassignedTickets.length}
+          count={totalCount}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={(event, newPage) => setPage(newPage)}

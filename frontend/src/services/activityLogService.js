@@ -30,7 +30,7 @@ export const activityLogService = {
     queryParams.append('page', page);
     queryParams.append('size', size);
 
-    const response = await apiClient.get(`/activity-logs?${queryParams.toString()}`);
+    const response = await apiClient.get(`/api/activity-logs?${queryParams.toString()}`);
     return response.data;
   },
 
@@ -38,7 +38,7 @@ export const activityLogService = {
    * Get recent activity logs
    */
   getRecentActivityLogs: async () => {
-    const response = await apiClient.get('/activity-logs/recent');
+    const response = await apiClient.get('/api/activity-logs/recent');
     return response.data;
   },
 
@@ -46,7 +46,7 @@ export const activityLogService = {
    * Get activity logs by user
    */
   getActivityLogsByUser: async (userIdentifier) => {
-    const response = await apiClient.get(`/activity-logs/user/${userIdentifier}`);
+    const response = await apiClient.get(`/api/activity-logs/user/${userIdentifier}`);
     return response.data;
   },
 
@@ -54,7 +54,7 @@ export const activityLogService = {
    * Get activity logs by severity
    */
   getActivityLogsBySeverity: async (severity) => {
-    const response = await apiClient.get(`/activity-logs/severity/${severity}`);
+    const response = await apiClient.get(`/api/activity-logs/severity/${severity}`);
     return response.data;
   },
 
@@ -62,7 +62,7 @@ export const activityLogService = {
    * Get activity logs by action
    */
   getActivityLogsByAction: async (action) => {
-    const response = await apiClient.get(`/activity-logs/action/${action}`);
+    const response = await apiClient.get(`/api/activity-logs/action/${action}`);
     return response.data;
   },
 
@@ -70,7 +70,7 @@ export const activityLogService = {
    * Search activity logs
    */
   searchActivityLogs: async (searchTerm) => {
-    const response = await apiClient.get(`/activity-logs/search?searchTerm=${encodeURIComponent(searchTerm)}`);
+    const response = await apiClient.get(`/api/activity-logs/search?searchTerm=${encodeURIComponent(searchTerm)}`);
     return response.data;
   },
 
@@ -78,7 +78,7 @@ export const activityLogService = {
    * Get activity statistics for the last 24 hours
    */
   getActivityStatistics: async () => {
-    const response = await apiClient.get('/activity-logs/statistics');
+    const response = await apiClient.get('/api/activity-logs/statistics');
     return response.data;
   },
 
@@ -86,7 +86,7 @@ export const activityLogService = {
    * Get most active users in the last 24 hours
    */
   getMostActiveUsers: async () => {
-    const response = await apiClient.get('/activity-logs/most-active-users');
+    const response = await apiClient.get('/api/activity-logs/most-active-users');
     return response.data;
   },
 
@@ -94,7 +94,7 @@ export const activityLogService = {
    * Get most common actions in the last 24 hours
    */
   getMostCommonActions: async () => {
-    const response = await apiClient.get('/activity-logs/most-common-actions');
+    const response = await apiClient.get('/api/activity-logs/most-common-actions');
     return response.data;
   },
 
@@ -102,7 +102,7 @@ export const activityLogService = {
    * Get failed login attempts in the last 24 hours
    */
   getFailedLoginAttempts: async () => {
-    const response = await apiClient.get('/activity-logs/failed-logins');
+    const response = await apiClient.get('/api/activity-logs/failed-logins');
     return response.data;
   },
 
@@ -110,7 +110,7 @@ export const activityLogService = {
    * Get suspicious activities
    */
   getSuspiciousActivities: async () => {
-    const response = await apiClient.get('/activity-logs/suspicious-activities');
+    const response = await apiClient.get('/api/activity-logs/suspicious-activities');
     return response.data;
   },
 
@@ -118,7 +118,7 @@ export const activityLogService = {
    * Get activity log by ID
    */
   getActivityLogById: async (id) => {
-    const response = await apiClient.get(`/activity-logs/${id}`);
+    const response = await apiClient.get(`/api/activity-logs/${id}`);
     return response.data;
   },
 
@@ -126,7 +126,7 @@ export const activityLogService = {
    * Delete old activity logs
    */
   deleteOldActivityLogs: async (daysToKeep = 90) => {
-    const response = await apiClient.delete(`/activity-logs/cleanup?daysToKeep=${daysToKeep}`);
+    const response = await apiClient.delete(`/api/activity-logs/cleanup?daysToKeep=${daysToKeep}`);
     return response.data;
   },
 
@@ -147,7 +147,7 @@ export const activityLogService = {
     if (userIdentifier) queryParams.append('userIdentifier', userIdentifier);
     if (severity) queryParams.append('severity', severity);
 
-    const response = await apiClient.get(`/activity-logs/export?${queryParams.toString()}`);
+    const response = await apiClient.get(`/api/activity-logs/export?${queryParams.toString()}`);
     return response.data;
   },
 

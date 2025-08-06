@@ -13,6 +13,7 @@ C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\con
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\controller\UserController.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\dgh_helpdesk\DghHelpdeskApplication.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\dto\UserAdminDto.java
+C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\dto\UserSimpleDto.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\entity\ActivityLog.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\entity\CommentType.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\entity\Equipment.java
@@ -37,6 +38,8 @@ C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\rep
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\CustomLdapAuthenticationProvider.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\CustomUserDetails.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\CustomUserDetailsService.java
+C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\DevAuthenticationProvider.java
+C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\DevUserDetailsService.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\JwtAuthenticationFilter.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\JwtTokenProvider.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\security\JwtUtil.java
@@ -47,6 +50,7 @@ C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\ser
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\service\SnmpService.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\service\TicketService.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\service\UserService.java
+C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\utils\SecurityUtils.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\validation\ValidationUtils.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\validation\ValidIpAddress.java
 C:\Users\XEON\Desktop\dgh-helpdesk\backend\src\main\java\ma\gov\dgh\helpdesk\validation\ValidMacAddress.java

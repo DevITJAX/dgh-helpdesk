@@ -4,12 +4,12 @@
 -- Check if all required tables exist
 SELECT 
     CASE 
-        WHEN COUNT(*) = 4 THEN 'PASS: All required tables exist'
+        WHEN COUNT(*) = 5 THEN 'PASS: All required tables exist'
         ELSE 'FAIL: Missing tables'
     END as table_check
 FROM INFORMATION_SCHEMA.TABLES 
 WHERE TABLE_SCHEMA = 'PUBLIC' 
-AND TABLE_NAME IN ('USERS', 'EQUIPMENT', 'TICKETS', 'TICKET_COMMENTS');
+AND TABLE_NAME IN ('USERS', 'EQUIPMENT', 'TICKETS', 'TICKET_COMMENTS', 'ACTIVITY_LOGS');
 
 -- Check Users table structure
 SELECT 
@@ -149,4 +149,15 @@ SELECT
 FROM INFORMATION_SCHEMA.TABLES 
 WHERE TABLE_SCHEMA = 'PUBLIC' 
 AND TABLE_TYPE = 'BASE TABLE'
-AND TABLE_NAME IN ('USERS', 'EQUIPMENT', 'TICKETS', 'TICKET_COMMENTS');
+AND TABLE_NAME IN ('USERS', 'EQUIPMENT', 'TICKETS', 'TICKET_COMMENTS', 'ACTIVITY_LOGS');
+
+-- Check Activity Logs table structure
+SELECT 
+    CASE 
+        WHEN COUNT(*) >= 14 THEN 'PASS: Activity Logs table has required columns'
+        ELSE 'FAIL: Activity Logs table missing columns'
+    END as activity_logs_table_check
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = 'PUBLIC' 
+AND TABLE_NAME = 'ACTIVITY_LOGS'
+AND COLUMN_NAME IN ('ID', 'TIMESTAMP', 'USER_IDENTIFIER', 'ACTION', 'DETAILS', 'SEVERITY', 'IP_ADDRESS', 'USER_AGENT', 'SESSION_ID', 'AFFECTED_RESOURCE', 'OLD_VALUE', 'NEW_VALUE', 'DEPARTMENT', 'LOCATION');

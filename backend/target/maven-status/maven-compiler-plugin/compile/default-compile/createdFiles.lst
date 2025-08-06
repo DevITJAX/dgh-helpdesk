@@ -79,10 +79,13 @@ ma\gov\dgh\helpdesk\controller\UserController$UserRoleRequest.class
 ma\gov\dgh\helpdesk\entity\CommentType.class
 ma\gov\dgh\helpdesk\service\DatabaseService.class
 ma\gov\dgh\helpdesk\service\SnmpService.class
+ma\gov\dgh\helpdesk\dto\UserSimpleDto.class
 ma\gov\dgh\helpdesk\entity\EquipmentType.class
 ma\gov\dgh\helpdesk\controller\DatabaseController.class
+ma\gov\dgh\helpdesk\security\DevAuthenticationProvider$1.class
 ma\gov\dgh\helpdesk\service\NetworkDiscoveryService.class
 ma\gov\dgh\helpdesk\entity\TicketStatus.class
+ma\gov\dgh\helpdesk\security\DevUserDetailsService$1.class
 ma\gov\dgh\helpdesk\validation\ValidIpAddress$IpAddressValidator.class
 ma\gov\dgh\helpdesk\config\AsyncConfig.class
 ma\gov\dgh\helpdesk\service\DatabaseService$BackupResult.class
