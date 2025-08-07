@@ -814,10 +814,10 @@ dgh-helpdesk/
 **Country**: Morocco  
 **System**: DGH HelpDesk IT Support Management  
 **Version**: 1.0.0  
-**Last Updated**: 2024  
+**Last Updated**: 2025
 
 ---
 
-**© 2024 Direction Générale de l'Hydraulique - Ministry of Equipment and Water, Morocco**
+**© 2025 Direction Générale de l'Hydraulique - Ministry of Equipment and Water, Morocco**
 
 *Built with modern technologies for government IT support excellence, featuring comprehensive security, role-based access control, and government compliance standards.* 
