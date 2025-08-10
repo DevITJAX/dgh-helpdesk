@@ -356,7 +356,7 @@ npm start
 **Frontend Configuration**
 ```javascript
 // API Configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
 
 // Authentication Configuration
 const AUTH_CONFIG = {
@@ -370,6 +370,34 @@ const AUTH_CONFIG = {
 - **Admin**: `admin` / `admin123`
 - **Technician**: `tech` / `tech123`
 - **Employee**: `user` / `user123`
+
+## ⚙️ CI/CD: GitHub Actions → Azure Container Registry (ACR) → Azure Container Instances (ACI)
+
+This repository is wired for automated build and deploy on pushes to the `main` branch.
+
+- Workflow: `.github/workflows/deploy.yml`
+- Trigger: push to `main` (and manual Run workflow)
+- What it does:
+  - Builds Docker images for backend and frontend
+  - Pushes to `myregistrydgh.azurecr.io` with tag `latest`
+  - Logs in to Azure and restarts ACI:
+    - Backend: `dgh-backend`
+    - Frontend: `dgh-frontend`
+
+Required GitHub repository secrets (Settings → Secrets and variables → Actions):
+- `ACR_LOGIN_SERVER` = `myregistrydgh.azurecr.io`
+- `ACR_USERNAME` = ACR admin username
+- `ACR_PASSWORD` = ACR admin password (rotate if exposed)
+- `AZURE_CREDENTIALS` = Output JSON from `az ad sp create-for-rbac --sdk-auth` (scoped to RG `DGH`)
+- `RESOURCE_GROUP` = `DGH`
+- `ACI_BACKEND_NAME` = `dgh-backend`
+- `ACI_FRONTEND_NAME` = `dgh-frontend`
+- `FRONTEND_API_URL` = `http://dgh-backend-unique.eastus.azurecontainer.io:8080`
+
+Notes:
+- React API URL is baked at build time via `REACT_APP_API_BASE_URL`. Update the secret if the backend URL changes.
+- Docker Desktop is not required for CI/CD; actions run on GitHub runners.
+- `docker-compose.yml` is optional for local development only.
 
 ## 🔧 **API Architecture**
 
@@ -651,10 +679,10 @@ private String email;
 ### **Moroccan Government Standards**
 
 **Official Branding**
-- **DGH Logo Integration** - Official branding throughout
-- **Government Colors** - Official blue theme (#1976d2)
-- **Professional Typography** - Government-appropriate styling
-- **Bilingual Support** - French and Arabic text
+- **DGH Logo Integration**: Official branding throughout
+- **Government Colors**: Official blue theme (#1976d2)
+- **Professional Typography**: Government-appropriate styling
+- **Bilingual Support**: French and Arabic text
 
 **Security Requirements**
 - **LDAP Integration** - Government domain authentication
@@ -820,4 +848,4 @@ dgh-helpdesk/
 
 **© 2025 Direction Générale de l'Hydraulique - Ministry of Equipment and Water, Morocco**
 
-*Built with modern technologies for government IT support excellence, featuring comprehensive security, role-based access control, and government compliance standards.* 
+*Built with modern technologies for government IT support excellence, featuring comprehensive security, role-based access control, and government compliance standards.*
