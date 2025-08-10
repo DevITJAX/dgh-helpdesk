@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      JAVA_OPTS: -XX:MaxRAMPercentage=75
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/actuator/health/liveness"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      REACT_APP_API_BASE_URL: http://localhost:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:80"
