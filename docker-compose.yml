@@ -1,3 +1,5 @@
+# Local development only: spin up backend (Spring Boot) and frontend (React via Nginx)
+# Not used in CI/CD. GitHub Actions builds images and Azure Container Instances run them.
 version: '3.9'
 
 services:
