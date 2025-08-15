@@ -2,10 +2,18 @@
 # Not used in CI/CD. GitHub Actions builds images and Azure Container Instances run them.
 version: '3.9'
 
+# Build arguments
+x-build-args: &build-args
+  BACKEND_API_URL: ${BACKEND_API_URL:-http://localhost:8080}
+  JAVA_VERSION: ${JAVA_VERSION:-17}
+  NODE_VERSION: ${NODE_VERSION:-20}
+
 services:
   backend:
     build:
       context: ./backend
+      args:
+        <<: *build-args
     environment:
       SPRING_PROFILES_ACTIVE: dev
       JAVA_OPTS: -XX:MaxRAMPercentage=75
@@ -21,8 +29,10 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        <<: *build-args
     environment:
-      REACT_APP_API_BASE_URL: http://localhost:8080
+      REACT_APP_API_BASE_URL: ${BACKEND_API_URL:-http://localhost:8080}
     depends_on:
       backend:
         condition: service_healthy

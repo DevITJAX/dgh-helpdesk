@@ -1,5 +1,9 @@
+# Build arguments
+ARG NODE_VERSION=20
+ARG NGINX_VERSION=1.27
+
 # --- Build stage ---
-FROM node:20-alpine AS build
+FROM node:${NODE_VERSION}-alpine AS build
 
 # Accept build argument for API URL
 ARG REACT_APP_API_BASE_URL=http://localhost:8080
@@ -10,7 +14,6 @@ WORKDIR /app
 
 # Copy the package.json and install dependencies
 COPY package*.json ./
-
 # Install the frontend dependencies
 RUN npm ci --legacy-peer-deps
 
@@ -19,10 +22,10 @@ COPY . .
 RUN npm run build
 
 # --- Runtime stage ---
-FROM nginx:1.27-alpine
+FROM nginx:${NGINX_VERSION}-alpine
 
-# Optional: custom nginx config for SPA routing (uncomment if added)
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy the build output from the previous stage to Nginx's default public directory
 COPY --from=build /app/build /usr/share/nginx/html
@@ -31,7 +34,8 @@ COPY --from=build /app/build /usr/share/nginx/html
 EXPOSE 80
 
 # Healthcheck to verify if the app is running
-HEALTHCHECK CMD wget -q -O - http://localhost/ || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD wget -q -O - http://localhost/ || exit 1
 
 # Command to run Nginx to serve the app
-CMD ["nginx","-g","daemon off;"]
+CMD ["nginx", "-g", "daemon off;"]
