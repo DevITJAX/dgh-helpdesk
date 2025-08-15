@@ -107,6 +107,72 @@ The system follows a modern microservices-inspired architecture with clear separ
 - **Role-Based Access Control** - Granular permission system
 - **Session Management** - Secure user session tracking and validation
 
+### Flexible LDAP Configuration
+The system provides a flexible LDAP configuration that can be easily enabled or disabled:
+
+#### **Quick LDAP Control**
+```bash
+# Enable LDAP authentication
+.\switch-ldap.bat enable
+# or
+.\switch-ldap.ps1 enable
+
+# Disable LDAP (use local authentication)
+.\switch-ldap.bat disable
+# or
+.\switch-ldap.ps1 disable
+
+# Check current status
+.\switch-ldap.bat status
+# or
+.\switch-ldap.ps1 status
+```
+
+#### **Profile-Based Configuration**
+- **`local` Profile** - LDAP disabled, local database authentication
+- **`ldap` Profile** - LDAP enabled, government domain authentication
+- **Automatic Detection** - System automatically switches based on `spring.ldap.enabled`
+
+#### **Environment Variables**
+```bash
+# Enable LDAP
+set SPRING_PROFILES_ACTIVE=ldap
+# or
+$env:SPRING_PROFILES_ACTIVE = "ldap"
+
+# Disable LDAP
+set SPRING_PROFILES_ACTIVE=local
+# or
+$env:SPRING_PROFILES_ACTIVE = "local"
+```
+
+#### **Command Line Arguments**
+```bash
+# Enable LDAP
+mvn spring-boot:run -Dspring.profiles.active=ldap
+
+# Disable LDAP
+mvn spring-boot:run -Dspring.profiles.active=local
+
+# Docker with LDAP enabled
+docker run -e SPRING_PROFILES_ACTIVE=ldap your-app
+
+# Docker with LDAP disabled
+docker run -e SPRING_PROFILES_ACTIVE=local your-app
+```
+
+#### **Configuration Files**
+- **`application.properties`** - Main configuration with LDAP settings
+- **`application-local.properties`** - Local development profile (LDAP disabled)
+- **`application-ldap.properties`** - LDAP profile (LDAP enabled)
+- **`application-prod.properties`** - Production profile (LDAP enabled)
+
+#### **LDAP Status Monitoring**
+The system provides real-time LDAP status information:
+- **`/api/ldap/status`** - Current LDAP status and authentication method
+- **`/api/ldap/config`** - LDAP configuration details
+- **`/api/ldap/health`** - LDAP connectivity health check
+
 ### Data Protection
 - **Input Validation** - Comprehensive server-side validation
 - **SQL Injection Prevention** - Parameterized queries and ORM protection
