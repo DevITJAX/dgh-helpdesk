@@ -12,13 +12,21 @@
 	<artifactId>dgh-helpdesk</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>dgh-helpdesk</name>
-	<description>Demo project for Spring Boot</description>
-	<url/>
+	<description>DGH HelpDesk - IT Support Management System for the Moroccan Ministry of Equipment and Water</description>
+	<url>https://github.com/DevITJAX/dgh-helpdesk</url>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<name>Direction Générale de l'Hydraulique</name>
+			<organization>Ministry of Equipment and Water</organization>
+			<organizationUrl>https://www.equipement.gov.ma</organizationUrl>
+		</developer>
 	</developers>
 	<scm>
 		<connection/>

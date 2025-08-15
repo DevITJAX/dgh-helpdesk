@@ -1,5 +1,7 @@
 # DGH HelpDesk - IT Support Management System
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **Direction Générale de l'Hydraulique** - Ministry of Equipment and Water, Morocco
 
 A comprehensive IT helpdesk management system designed for government institutions, featuring role-based access control, ticket management, equipment monitoring, and comprehensive activity logging.
@@ -275,6 +277,24 @@ The project follows a feature-based organization:
 - **Frontend** - React application with component-based structure
 - **Shared Resources** - Common utilities and configurations
 - **Documentation** - Comprehensive project documentation
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+**Copyright (c) 2025 Direction Générale de l'Hydraulique - Ministry of Equipment and Water, Morocco**
+
+The MIT License is a permissive open-source license that allows:
+- Commercial use
+- Modification and distribution
+- Private use
+- Patent use
+
+This license is particularly suitable for government projects as it:
+- Ensures maximum accessibility and adoption
+- Allows other government institutions to use and modify the software
+- Provides legal protection while maintaining openness
+- Is widely recognized and trusted in the open-source community
 
 ## 📞 Support & Contact
 
