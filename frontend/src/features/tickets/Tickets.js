@@ -31,7 +31,8 @@ import {
   Grid,
   Tabs,
   Tab,
-  Divider
+  Divider,
+  Snackbar
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -100,6 +101,7 @@ const Tickets = () => {
     reason: ''
   });
   const [totalCount, setTotalCount] = useState(0);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   const { user } = useAuth();
 
@@ -115,6 +117,10 @@ const Tickets = () => {
   // Status colors
   const getStatusColor = (status) => {
     return STATUS_COLORS[status] || 'default';
+  };
+
+  const handleNotificationClose = () => {
+    setNotification({ ...notification, open: false });
   };
 
   // Initialize filters from URL parameters
@@ -957,6 +963,18 @@ const Tickets = () => {
           setCreateFormOpen(false);
         }}
       />
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleNotificationClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={handleNotificationClose} severity={notification.severity} sx={{ width: '100%' }}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </PageLayout>
   );
 };

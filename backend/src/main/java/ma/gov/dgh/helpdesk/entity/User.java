@@ -20,7 +20,13 @@ import java.util.List;
 @Table(name = "users", indexes = {
     @Index(name = "idx_user_ldap_username", columnList = "ldap_username"),
     @Index(name = "idx_user_email", columnList = "email"),
-    @Index(name = "idx_user_department", columnList = "department")
+    @Index(name = "idx_user_department", columnList = "department"),
+    @Index(name = "idx_user_role", columnList = "role"),
+    @Index(name = "idx_user_is_active", columnList = "is_active"),
+    @Index(name = "idx_user_full_name", columnList = "full_name"),
+    @Index(name = "idx_user_role_active", columnList = "role,is_active"),
+    @Index(name = "idx_user_department_active", columnList = "department,is_active"),
+    @Index(name = "idx_user_last_login", columnList = "last_login")
 })
 public class User {
     

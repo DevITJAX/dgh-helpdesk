@@ -63,6 +63,7 @@ import { DashboardStatistics } from '../../types/dashboard.ts';
 import { useAuth } from '../../contexts/AuthContext';
 import EnhancedPagination from '../../components/common/EnhancedPagination';
 import PageLayout from '../../components/common/PageLayout';
+import { exportDashboardStatsToCSV } from '../../utils/csvExport';
 
 const AdminDashboard = ({ statistics, loading, error }) => {
   const navigate = useNavigate();
@@ -707,6 +708,13 @@ const AdminDashboard = ({ statistics, loading, error }) => {
             onClick={handleAssignTickets}
           >
             Assign Ticket
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Assessment />}
+            onClick={handleGenerateReport}
+          >
+            Export Report
           </Button>
         </Box>
       }

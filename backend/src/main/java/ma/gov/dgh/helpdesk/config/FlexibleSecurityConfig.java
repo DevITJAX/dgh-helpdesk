@@ -9,13 +9,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -43,11 +47,8 @@ public class FlexibleSecurityConfig {
     @Autowired(required = false)
     private CustomLdapAuthenticationProvider customLdapAuthenticationProvider;
 
-    @Autowired
+    @Autowired(required = false)
     private DevAuthenticationProvider devAuthenticationProvider;
-
-    @Autowired
-    private UserDetailsService userDetailsService;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -62,11 +63,40 @@ public class FlexibleSecurityConfig {
     }
 
     /**
+     * Default UserDetailsService for when no specific profile is active
+     * This provides basic authentication for development/testing
+     */
+    @Bean
+    @Profile("default")
+    public UserDetailsService defaultUserDetailsService() {
+        UserDetails admin = User.builder()
+            .username("admin")
+            .password(passwordEncoder().encode("admin123"))
+            .roles("ADMIN")
+            .build();
+
+        UserDetails user = User.builder()
+            .username("user")
+            .password(passwordEncoder().encode("user123"))
+            .roles("EMPLOYEE")
+            .build();
+
+        UserDetails helpdeskAdmin = User.builder()
+            .username("helpdesk-admin")
+            .password(passwordEncoder().encode("helpdesk123"))
+            .roles("ADMIN")
+            .build();
+
+        return new InMemoryUserDetailsManager(admin, user, helpdeskAdmin);
+    }
+
+    /**
      * JWT Authentication Filter
      */
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
+        // Use the default UserDetailsService to avoid circular dependency
+        return new JwtAuthenticationFilter(jwtTokenProvider, defaultUserDetailsService());
     }
 
     /**
@@ -134,9 +164,11 @@ public class FlexibleSecurityConfig {
             auth.authenticationProvider(customLdapAuthenticationProvider);
             System.out.println("🔐 LDAP Authentication ENABLED - Using LDAP provider");
         } else {
-            // Use local authentication
-            auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-            auth.authenticationProvider(devAuthenticationProvider);
+            // Use local authentication with default UserDetailsService
+            auth.userDetailsService(defaultUserDetailsService()).passwordEncoder(passwordEncoder());
+            if (devAuthenticationProvider != null) {
+                auth.authenticationProvider(devAuthenticationProvider);
+            }
             System.out.println("🔑 Local Authentication ENABLED - Using local provider");
         }
         

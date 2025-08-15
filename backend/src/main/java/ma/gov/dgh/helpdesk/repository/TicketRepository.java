@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository interface for Ticket entity operations
@@ -84,12 +85,12 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     List<Ticket> findOpenTickets();
     
     /**
-     * Find tickets with pagination and search
+     * Find tickets with pagination and search - Optimized for performance
      */
     @Query("SELECT t FROM Ticket t WHERE " +
            "(:search IS NULL OR " +
            "LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "LOWER(CAST(t.description AS string)) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "t.description LIKE CONCAT('%', :search, '%') OR " +
            "LOWER(t.category) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
            "(:status IS NULL OR t.status = :status) AND " +
            "(:priority IS NULL OR t.priority = :priority) AND " +
@@ -105,6 +106,130 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
                                        @Param("assignedTo") User assignedTo,
                                        @Param("equipmentId") Long equipmentId,
                                        Pageable pageable);
+
+    /**
+     * Find tickets with related entities loaded - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT DISTINCT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH t.assignedTo " +
+           "LEFT JOIN FETCH t.equipment " +
+           "WHERE (:search IS NULL OR " +
+           "LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "t.description LIKE CONCAT('%', :search, '%') OR " +
+           "LOWER(t.category) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+           "(:status IS NULL OR t.status = :status) AND " +
+           "(:priority IS NULL OR t.priority = :priority) AND " +
+           "(:category IS NULL OR t.category = :category) AND " +
+           "(:createdBy IS NULL OR t.createdBy = :createdBy) AND " +
+           "(:assignedTo IS NULL OR t.assignedTo = :assignedTo) AND " +
+           "(:equipmentId IS NULL OR t.equipment.id = :equipmentId)")
+    List<Ticket> findTicketsWithFiltersAndEntities(@Param("search") String search,
+                                                   @Param("status") TicketStatus status,
+                                                   @Param("priority") TicketPriority priority,
+                                                   @Param("category") TicketCategory category,
+                                                   @Param("createdBy") User createdBy,
+                                                   @Param("assignedTo") User assignedTo,
+                                                   @Param("equipmentId") Long equipmentId);
+
+    /**
+     * Find ticket by ID with related entities - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH t.assignedTo " +
+           "LEFT JOIN FETCH t.equipment " +
+           "WHERE t.id = :id")
+    Optional<Ticket> findByIdWithEntities(@Param("id") Long id);
+
+    /**
+     * Find tickets by status with related entities - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT DISTINCT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH t.assignedTo " +
+           "WHERE t.status = :status")
+    List<Ticket> findByStatusWithEntities(@Param("status") TicketStatus status);
+
+    /**
+     * Find tickets by priority with related entities - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT DISTINCT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH t.assignedTo " +
+           "WHERE t.priority = :priority")
+    List<Ticket> findByPriorityWithEntities(@Param("priority") TicketPriority priority);
+
+    /**
+     * Find tickets by category with related entities - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT DISTINCT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH t.assignedTo " +
+           "WHERE t.category = :category")
+    List<Ticket> findByCategoryWithEntities(@Param("category") TicketCategory category);
+
+    /**
+     * Find tickets created by user with related entities - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT DISTINCT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH t.assignedTo " +
+           "WHERE t.createdBy = :createdBy")
+    List<Ticket> findByCreatedByWithEntities(@Param("createdBy") User createdBy);
+
+    /**
+     * Find tickets assigned to user with related entities - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT DISTINCT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH t.assignedTo " +
+           "WHERE t.assignedTo = :assignedTo")
+    List<Ticket> findByAssignedToWithEntities(@Param("assignedTo") User assignedTo);
+
+    /**
+     * Find unassigned tickets with related entities - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT DISTINCT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "WHERE t.assignedTo IS NULL")
+    List<Ticket> findUnassignedTicketsWithEntities();
+
+    /**
+     * Find open tickets with related entities - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT DISTINCT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH t.assignedTo " +
+           "WHERE t.status NOT IN ('RESOLVED', 'CLOSED', 'CANCELLED')")
+    List<Ticket> findOpenTicketsWithEntities();
+
+    /**
+     * Find overdue tickets with related entities - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT DISTINCT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH t.assignedTo " +
+           "WHERE t.dueDate < :currentTime AND t.status NOT IN ('RESOLVED', 'CLOSED', 'CANCELLED')")
+    List<Ticket> findOverdueTicketsWithEntities(@Param("currentTime") LocalDateTime currentTime);
+
+    /**
+     * Find escalated tickets with related entities - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT DISTINCT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH t.assignedTo " +
+           "WHERE t.isEscalated = true")
+    List<Ticket> findEscalatedTicketsWithEntities();
+
+    /**
+     * Find critical open tickets with related entities - Optimized to prevent N+1 queries
+     */
+    @Query("SELECT DISTINCT t FROM Ticket t " +
+           "LEFT JOIN FETCH t.createdBy " +
+           "LEFT JOIN FETCH t.assignedTo " +
+           "WHERE t.priority = 'CRITICAL' AND t.status NOT IN ('RESOLVED', 'CLOSED', 'CANCELLED')")
+    List<Ticket> findCriticalOpenTicketsWithEntities();
     
     /**
      * Count tickets by status

@@ -8,7 +8,8 @@ import {
   Typography,
   Button,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Snackbar
 } from '@mui/material';
 import {
   BugReport,
@@ -17,14 +18,17 @@ import {
   Schedule,
   Computer,
   Person,
-  Visibility
+  Visibility,
+  FileDownload
 } from '@mui/icons-material';
 import CreateTicketForm from '../../components/forms/CreateTicketForm';
+import { exportTicketsToCSV } from '../../utils/csvExport';
 
 const EmployeeDashboard = ({ statistics, loading, error }) => {
   const navigate = useNavigate();
   const [myTickets, setMyTickets] = useState([]);
   const [createFormOpen, setCreateFormOpen] = useState(false);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   // Mock data for demonstration - replace with actual API calls
   useEffect(() => {
@@ -35,6 +39,61 @@ const EmployeeDashboard = ({ statistics, loading, error }) => {
       { id: 3, title: 'Software installation request', status: 'RESOLVED', createdAt: '2024-01-13' },
     ]);
   }, []);
+
+  const handleExportMyTickets = async () => {
+    try {
+      // Show loading notification
+      setNotification({
+        open: true,
+        message: 'Exporting your tickets data...',
+        severity: 'info'
+      });
+
+      // Fetch employee's tickets from the API
+      const response = await fetch('/api/tickets?createdBy=me&size=1000');
+      if (!response.ok) {
+        throw new Error('Failed to fetch tickets data');
+      }
+
+      const ticketsData = await response.json();
+      const tickets = ticketsData.content || ticketsData || [];
+
+      if (tickets.length === 0) {
+        setNotification({
+          open: true,
+          message: 'No tickets found to export.',
+          severity: 'warning'
+        });
+        return;
+      }
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `My_Tickets_${timestamp}.csv`;
+
+      // Export tickets to CSV
+      exportTicketsToCSV(tickets, filename);
+
+      // Show success notification
+      setNotification({
+        open: true,
+        message: `Successfully exported ${tickets.length} tickets to CSV!`,
+        severity: 'success'
+      });
+
+    } catch (error) {
+      console.error('Error exporting tickets:', error);
+      setNotification({
+        open: true,
+        message: 'Failed to export tickets. Please try again.',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleNotificationClose = () => {
+    setNotification({ ...notification, open: false });
+  };
 
   const StatCard = ({ title, value, icon, color = 'primary.main', subtitle }) => (
     <Card sx={{ height: '100%' }}>
@@ -113,7 +172,11 @@ const EmployeeDashboard = ({ statistics, loading, error }) => {
     setCreateFormOpen(true);
   };
 
-  const handleTicketCreated = (newTicket) => {
+  const handleCreateTicketClose = () => {
+    setCreateFormOpen(false);
+  };
+
+  const handleCreateTicketSave = (newTicket) => {
     // Add the new ticket to the list
     setMyTickets([newTicket, ...myTickets]);
     setCreateFormOpen(false);
@@ -226,6 +289,16 @@ const EmployeeDashboard = ({ statistics, loading, error }) => {
         
         <Grid item xs={12} sm={6} md={4}>
           <QuickActionCard
+            title="Export My Tickets"
+            description="Download your tickets data as CSV"
+            icon={<FileDownload sx={{ color: 'white', fontSize: 32 }} />}
+            color="secondary.main"
+            onClick={handleExportMyTickets}
+          />
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={4}>
+          <QuickActionCard
             title="My Profile"
             description="View and edit your profile information"
             icon={<Person sx={{ color: 'white', fontSize: 32 }} />}
@@ -238,9 +311,21 @@ const EmployeeDashboard = ({ statistics, loading, error }) => {
       {/* Create Ticket Form - Same as in Ticket Management */}
       <CreateTicketForm
         open={createFormOpen}
-        onClose={() => setCreateFormOpen(false)}
-        onTicketCreated={handleTicketCreated}
+        onClose={handleCreateTicketClose}
+        onSave={handleCreateTicketSave}
       />
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleNotificationClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={handleNotificationClose} severity={notification.severity} sx={{ width: '100%' }}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

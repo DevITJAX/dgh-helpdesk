@@ -23,7 +23,14 @@ import java.util.List;
     @Index(name = "idx_ticket_created_by", columnList = "created_by"),
     @Index(name = "idx_ticket_assigned_to", columnList = "assigned_to"),
     @Index(name = "idx_ticket_equipment", columnList = "equipment_id"),
-    @Index(name = "idx_ticket_created_at", columnList = "created_at")
+    @Index(name = "idx_ticket_created_at", columnList = "created_at"),
+    @Index(name = "idx_ticket_updated_at", columnList = "updated_at"),
+    @Index(name = "idx_ticket_due_date", columnList = "due_date"),
+    @Index(name = "idx_ticket_resolved_at", columnList = "resolved_at"),
+    @Index(name = "idx_ticket_is_escalated", columnList = "is_escalated"),
+    @Index(name = "idx_ticket_status_priority", columnList = "status,priority"),
+    @Index(name = "idx_ticket_assigned_status", columnList = "assigned_to,status"),
+    @Index(name = "idx_ticket_created_status", columnList = "created_by,status")
 })
 public class Ticket {
     

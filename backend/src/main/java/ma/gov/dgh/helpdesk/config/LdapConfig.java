@@ -58,10 +58,8 @@ public class LdapConfig {
         contextSource.setUserDn(ldapUsername);
         contextSource.setPassword(ldapPassword);
         
-        // Connection pool settings
+        // Basic connection settings
         contextSource.setPooled(true);
-        contextSource.setMinEvictableIdleTimeMillis(60000);
-        contextSource.setMaxEvictableIdleTimeMillis(300000);
         
         return contextSource;
     }

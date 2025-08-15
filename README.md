@@ -128,6 +128,34 @@ The system provides a flexible LDAP configuration that can be easily enabled or 
 .\switch-ldap.ps1 status
 ```
 
+#### **Alternative Methods (If Scripts Don't Work)**
+If you can't run PowerShell scripts due to execution policy restrictions:
+
+**Direct Environment Variables:**
+```bash
+# Windows Command Prompt
+set SPRING_PROFILES_ACTIVE=ldap    # Enable LDAP
+set SPRING_PROFILES_ACTIVE=local   # Disable LDAP
+
+# PowerShell
+$env:SPRING_PROFILES_ACTIVE = "ldap"    # Enable LDAP
+$env:SPRING_PROFILES_ACTIVE = "local"   # Disable LDAP
+```
+
+**Maven Commands:**
+```bash
+# With LDAP enabled
+mvn spring-boot:run -Dspring.profiles.active=ldap
+
+# With LDAP disabled
+mvn spring-boot:run -Dspring.profiles.active=local
+```
+
+**Manual Commands Reference:**
+- See `switch-ldap.txt` for complete manual command reference
+- Use `switch-ldap-simple.ps1` if the main PowerShell script has issues
+- The batch file (`switch-ldap.bat`) should work in all Windows environments
+
 #### **Profile-Based Configuration**
 - **`local` Profile** - LDAP disabled, local database authentication
 - **`ldap` Profile** - LDAP enabled, government domain authentication

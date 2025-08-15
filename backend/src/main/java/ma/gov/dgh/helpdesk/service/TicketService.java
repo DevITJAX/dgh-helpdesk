@@ -4,14 +4,18 @@ import ma.gov.dgh.helpdesk.entity.*;
 import ma.gov.dgh.helpdesk.repository.TicketRepository;
 import ma.gov.dgh.helpdesk.repository.TicketCommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Service class for Ticket entity operations
@@ -32,6 +36,7 @@ public class TicketService {
     /**
      * Create a new ticket
      */
+    @CacheEvict(value = {"tickets", "ticketStatistics"}, allEntries = true)
     public Ticket createTicket(Ticket ticket) {
         if (ticket.getCreatedBy() == null) {
             throw new IllegalArgumentException("Ticket must have a creator");
@@ -64,6 +69,7 @@ public class TicketService {
     /**
      * Update an existing ticket
      */
+    @CacheEvict(value = {"tickets", "ticketStatistics"}, allEntries = true)
     public Ticket updateTicket(Ticket ticket) {
         if (ticket.getId() == null) {
             throw new IllegalArgumentException("Ticket ID cannot be null for update operation");
@@ -97,216 +103,250 @@ public class TicketService {
      * Find ticket by ID
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets", key = "#id")
     public Optional<Ticket> findById(Long id) {
-        return ticketRepository.findById(id);
+        return ticketRepository.findByIdWithEntities(id);
     }
-    
+
     /**
      * Get all tickets
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets")
     public List<Ticket> findAll() {
         return ticketRepository.findAll();
     }
-    
+
     /**
      * Count all tickets
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "ticketStatistics")
     public long countAllTickets() {
         return ticketRepository.count();
     }
-    
+
     /**
      * Get tickets by status
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets", key = "#status")
     public List<Ticket> findByStatus(TicketStatus status) {
-        return ticketRepository.findByStatus(status);
+        return ticketRepository.findByStatusWithEntities(status);
     }
-    
+
     /**
      * Get tickets by priority
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets", key = "#priority")
     public List<Ticket> findByPriority(TicketPriority priority) {
-        return ticketRepository.findByPriority(priority);
+        return ticketRepository.findByPriorityWithEntities(priority);
     }
-    
+
     /**
      * Get tickets by category
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets", key = "#category")
     public List<Ticket> findByCategory(TicketCategory category) {
-        return ticketRepository.findByCategory(category);
+        return ticketRepository.findByCategoryWithEntities(category);
     }
-    
+
     /**
      * Get tickets created by user
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets", key = "#createdBy")
     public List<Ticket> findByCreatedBy(User createdBy) {
-        return ticketRepository.findByCreatedBy(createdBy);
+        return ticketRepository.findByCreatedByWithEntities(createdBy);
     }
-    
+
     /**
      * Get tickets assigned to user
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets", key = "#assignedTo")
     public List<Ticket> findByAssignedTo(User assignedTo) {
-        return ticketRepository.findByAssignedTo(assignedTo);
+        return ticketRepository.findByAssignedToWithEntities(assignedTo);
     }
-    
+
     /**
      * Get unassigned tickets
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets")
     public List<Ticket> findUnassignedTickets() {
-        return ticketRepository.findByAssignedToIsNull();
+        return ticketRepository.findUnassignedTicketsWithEntities();
     }
-    
+
     /**
      * Get open tickets
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets")
     public List<Ticket> findOpenTickets() {
-        return ticketRepository.findOpenTickets();
+        return ticketRepository.findOpenTicketsWithEntities();
     }
-    
+
     /**
      * Get overdue tickets
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets")
     public List<Ticket> findOverdueTickets() {
-        return ticketRepository.findOverdueTickets(LocalDateTime.now());
+        return ticketRepository.findOverdueTicketsWithEntities(LocalDateTime.now());
     }
-    
+
     /**
      * Get escalated tickets
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets")
     public List<Ticket> findEscalatedTickets() {
-        return ticketRepository.findByIsEscalatedTrue();
+        return ticketRepository.findEscalatedTicketsWithEntities();
     }
-    
+
     /**
      * Get critical open tickets
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets")
     public List<Ticket> findCriticalOpenTickets() {
-        return ticketRepository.findCriticalOpenTickets();
+        return ticketRepository.findCriticalOpenTicketsWithEntities();
+    }
+    
+    /**
+     * Get ticket statistics asynchronously for better performance
+     */
+    @Async("taskExecutor")
+    @Transactional(readOnly = true)
+    @Cacheable(value = "ticketStatistics")
+    public CompletableFuture<TicketStatistics> getTicketStatisticsAsync() {
+        return CompletableFuture.completedFuture(getTicketStatistics());
+    }
+    
+    /**
+     * Bulk update ticket statuses asynchronously
+     */
+    @Async("taskExecutor")
+    @CacheEvict(value = {"tickets", "ticketStatistics"}, allEntries = true)
+    public CompletableFuture<Void> bulkUpdateStatusAsync(List<Long> ticketIds, TicketStatus newStatus) {
+        List<Ticket> tickets = ticketRepository.findAllById(ticketIds);
+        for (Ticket ticket : tickets) {
+            ticket.setStatus(newStatus);
+            ticket.setUpdatedAt(LocalDateTime.now());
+            if (newStatus == TicketStatus.RESOLVED || newStatus == TicketStatus.CLOSED) {
+                ticket.setResolvedAt(LocalDateTime.now());
+            }
+        }
+        ticketRepository.saveAll(tickets);
+        return CompletableFuture.completedFuture(null);
+    }
+    
+    /**
+     * Bulk assign tickets asynchronously
+     */
+    @Async("taskExecutor")
+    @CacheEvict(value = {"tickets", "ticketStatistics"}, allEntries = true)
+    public CompletableFuture<Void> bulkAssignTicketsAsync(List<Long> ticketIds, User assignedTo) {
+        List<Ticket> tickets = ticketRepository.findAllById(ticketIds);
+        for (Ticket ticket : tickets) {
+            ticket.setAssignedTo(assignedTo);
+            ticket.setUpdatedAt(LocalDateTime.now());
+        }
+        ticketRepository.saveAll(tickets);
+        return CompletableFuture.completedFuture(null);
     }
     
     /**
      * Get tickets with filters and pagination
      */
     @Transactional(readOnly = true)
-    public Page<Ticket> findTicketsWithFilters(String search, TicketStatus status, TicketPriority priority,
-                                              TicketCategory category, User createdBy, User assignedTo,
-                                              Long equipmentId, Pageable pageable) {
+    public Page<Ticket> findTicketsWithFilters(String search, TicketStatus status, 
+                                              TicketPriority priority, TicketCategory category,
+                                              User createdBy, User assignedTo, Long equipmentId, 
+                                              Pageable pageable) {
         return ticketRepository.findTicketsWithFilters(search, status, priority, category, 
                                                       createdBy, assignedTo, equipmentId, pageable);
     }
     
     /**
-     * Assign ticket to user
+     * Assign ticket to a user
      */
+    @CacheEvict(value = {"tickets", "ticketStatistics"}, allEntries = true)
     public Ticket assignTicket(Long ticketId, User assignedTo) {
-        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
-        if (ticketOpt.isEmpty()) {
+        Optional<Ticket> ticket = ticketRepository.findById(ticketId);
+        if (ticket.isEmpty()) {
             throw new IllegalArgumentException("Ticket not found with ID: " + ticketId);
         }
         
-        Ticket ticket = ticketOpt.get();
-        User previousAssignee = ticket.getAssignedTo();
-        ticket.setAssignedTo(assignedTo);
+        Ticket existingTicket = ticket.get();
+        existingTicket.setAssignedTo(assignedTo);
+        existingTicket.setUpdatedAt(LocalDateTime.now());
         
-        if (ticket.getStatus() == TicketStatus.OPEN) {
-            ticket.setStatus(TicketStatus.IN_PROGRESS);
-        }
-        
-        Ticket savedTicket = ticketRepository.save(ticket);
-        
-        // Add assignment change comment
-        addAssignmentChangeComment(savedTicket, previousAssignee, assignedTo);
-        
-        return savedTicket;
+        return ticketRepository.save(existingTicket);
     }
     
     /**
      * Change ticket status
      */
+    @CacheEvict(value = {"tickets", "ticketStatistics"}, allEntries = true)
     public Ticket changeStatus(Long ticketId, TicketStatus newStatus, String comment) {
-        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
-        if (ticketOpt.isEmpty()) {
+        Optional<Ticket> ticket = ticketRepository.findById(ticketId);
+        if (ticket.isEmpty()) {
             throw new IllegalArgumentException("Ticket not found with ID: " + ticketId);
         }
         
-        Ticket ticket = ticketOpt.get();
-        TicketStatus oldStatus = ticket.getStatus();
-        ticket.setStatus(newStatus);
+        Ticket existingTicket = ticket.get();
+        TicketStatus oldStatus = existingTicket.getStatus();
+        existingTicket.setStatus(newStatus);
+        existingTicket.setUpdatedAt(LocalDateTime.now());
         
         if (newStatus == TicketStatus.RESOLVED || newStatus == TicketStatus.CLOSED) {
-            ticket.setResolvedAt(LocalDateTime.now());
+            existingTicket.setResolvedAt(LocalDateTime.now());
         }
         
-        Ticket savedTicket = ticketRepository.save(ticket);
-        
-        // Add status change comment
-        addStatusChangeComment(savedTicket, oldStatus, newStatus);
-        
-        // Add user comment if provided
+        // Add status change comment if provided
         if (comment != null && !comment.trim().isEmpty()) {
-            TicketComment userComment = new TicketComment(savedTicket, ticket.getAssignedTo(), comment);
-            userComment.setCommentType(CommentType.COMMENT);
-            ticketCommentRepository.save(userComment);
+            TicketComment statusComment = new TicketComment(existingTicket, existingTicket.getAssignedTo(), 
+                comment, true);
+            statusComment.setCommentType(CommentType.STATUS_CHANGE);
+            ticketCommentRepository.save(statusComment);
         }
         
-        return savedTicket;
+        return ticketRepository.save(existingTicket);
     }
     
     /**
      * Escalate ticket
      */
+    @CacheEvict(value = {"tickets", "ticketStatistics"}, allEntries = true)
     public Ticket escalateTicket(Long ticketId, String reason) {
-        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
-        if (ticketOpt.isEmpty()) {
+        Optional<Ticket> ticket = ticketRepository.findById(ticketId);
+        if (ticket.isEmpty()) {
             throw new IllegalArgumentException("Ticket not found with ID: " + ticketId);
         }
         
-        Ticket ticket = ticketOpt.get();
-        ticket.setIsEscalated(true);
-        ticket.setEscalationReason(reason);
+        Ticket existingTicket = ticket.get();
+        existingTicket.setIsEscalated(true);
+        existingTicket.setEscalationReason(reason);
+        existingTicket.setUpdatedAt(LocalDateTime.now());
         
-        // Increase priority if not already critical
-        if (ticket.getPriority() != TicketPriority.CRITICAL) {
-            TicketPriority oldPriority = ticket.getPriority();
-            ticket.setPriority(TicketPriority.HIGH);
-            addPriorityChangeComment(ticket, oldPriority, TicketPriority.HIGH);
-        }
-        
-        Ticket savedTicket = ticketRepository.save(ticket);
-        
-        // Add escalation comment
-        TicketComment escalationComment = new TicketComment(savedTicket, ticket.getCreatedBy(), 
-            "Ticket escalated. Reason: " + reason, true);
-        escalationComment.setCommentType(CommentType.SYSTEM);
-        ticketCommentRepository.save(escalationComment);
-        
-        return savedTicket;
+        return ticketRepository.save(existingTicket);
     }
     
     /**
      * Add comment to ticket
      */
+    @CacheEvict(value = {"tickets"}, allEntries = true)
     public TicketComment addComment(Long ticketId, User user, String comment, Boolean isInternal) {
-        Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
-        if (ticketOpt.isEmpty()) {
+        Optional<Ticket> ticket = ticketRepository.findById(ticketId);
+        if (ticket.isEmpty()) {
             throw new IllegalArgumentException("Ticket not found with ID: " + ticketId);
         }
         
-        Ticket ticket = ticketOpt.get();
-        TicketComment ticketComment = new TicketComment(ticket, user, comment, isInternal);
+        TicketComment ticketComment = new TicketComment(ticket.get(), user, comment, isInternal);
         return ticketCommentRepository.save(ticketComment);
     }
     
@@ -315,23 +355,36 @@ public class TicketService {
      */
     @Transactional(readOnly = true)
     public List<TicketComment> getTicketComments(Long ticketId) {
-        return ticketCommentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId);
+        Optional<Ticket> ticket = ticketRepository.findById(ticketId);
+        if (ticket.isEmpty()) {
+            throw new IllegalArgumentException("Ticket not found with ID: " + ticketId);
+        }
+        
+        return ticketCommentRepository.findByTicketOrderByCreatedAtAsc(ticket.get());
     }
     
     /**
      * Delete ticket
      */
+    @CacheEvict(value = {"tickets", "ticketStatistics"}, allEntries = true)
     public void deleteTicket(Long ticketId) {
-        if (!ticketRepository.existsById(ticketId)) {
+        Optional<Ticket> ticket = ticketRepository.findById(ticketId);
+        if (ticket.isEmpty()) {
             throw new IllegalArgumentException("Ticket not found with ID: " + ticketId);
         }
-        ticketRepository.deleteById(ticketId);
+        
+        // Delete comments first
+        ticketCommentRepository.deleteByTicket(ticket.get());
+        
+        // Delete ticket
+        ticketRepository.delete(ticket.get());
     }
     
     /**
      * Get ticket statistics
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "ticketStatistics")
     public TicketStatistics getTicketStatistics() {
         long totalTickets = ticketRepository.count();
         long openTickets = ticketRepository.countByStatus(TicketStatus.OPEN);
@@ -349,6 +402,7 @@ public class TicketService {
      * Get tickets created today
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets")
     public List<Ticket> findTicketsCreatedToday() {
         LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
         LocalDateTime endOfDay = startOfDay.plusDays(1);
@@ -359,6 +413,7 @@ public class TicketService {
      * Get tickets resolved today
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "tickets")
     public List<Ticket> findTicketsResolvedToday() {
         LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
         LocalDateTime endOfDay = startOfDay.plusDays(1);

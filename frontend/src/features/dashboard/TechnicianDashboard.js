@@ -15,7 +15,8 @@ import {
   ListItemIcon,
   Divider,
   CircularProgress,
-  Badge
+  Badge,
+  Snackbar
 } from '@mui/material';
 import {
   BugReport,
@@ -24,10 +25,12 @@ import {
   CheckCircle,
   Schedule,
   PriorityHigh,
-  TrendingUp
+  TrendingUp,
+  FileDownload
 } from '@mui/icons-material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
+import { exportTicketsToCSV } from '../../utils/csvExport';
 
 const TechnicianDashboard = ({ statistics, loading, error }) => {
   const navigate = useNavigate();
@@ -36,6 +39,7 @@ const TechnicianDashboard = ({ statistics, loading, error }) => {
   const [slaAlerts, setSlaAlerts] = useState([]);
   const [recentAssignments, setRecentAssignments] = useState([]);
   const [performanceStats, setPerformanceStats] = useState({});
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   // Mock data for demonstration - replace with actual API calls
   useEffect(() => {
@@ -81,6 +85,61 @@ const TechnicianDashboard = ({ statistics, loading, error }) => {
       searchParams.set('assignedTo', user.id);
     }
     navigate(`/tickets?${searchParams.toString()}`);
+  };
+
+  const handleExportMyTickets = async () => {
+    try {
+      // Show loading notification
+      setNotification({
+        open: true,
+        message: 'Exporting your assigned tickets data...',
+        severity: 'info'
+      });
+
+      // Fetch technician's assigned tickets from the API
+      const response = await fetch(`/api/tickets?assignedTo=${user?.id}&size=1000`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch tickets data');
+      }
+
+      const ticketsData = await response.json();
+      const tickets = ticketsData.content || ticketsData || [];
+
+      if (tickets.length === 0) {
+        setNotification({
+          open: true,
+          message: 'No assigned tickets found to export.',
+          severity: 'warning'
+        });
+        return;
+      }
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `My_Assigned_Tickets_${timestamp}.csv`;
+
+      // Export tickets to CSV
+      exportTicketsToCSV(tickets, filename);
+
+      // Show success notification
+      setNotification({
+        open: true,
+        message: `Successfully exported ${tickets.length} assigned tickets to CSV!`,
+        severity: 'success'
+      });
+
+    } catch (error) {
+      console.error('Error exporting tickets:', error);
+      setNotification({
+        open: true,
+        message: 'Failed to export tickets. Please try again.',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleNotificationClose = () => {
+    setNotification({ ...notification, open: false });
   };
 
   const StatCard = ({ title, value, icon, color = 'primary.main', subtitle, trend }) => (
@@ -320,6 +379,52 @@ const TechnicianDashboard = ({ statistics, loading, error }) => {
           </Card>
         </Grid>
 
+        {/* Quick Actions */}
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Quick Actions
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Assignment />}
+                    onClick={handleViewMyTickets}
+                    fullWidth
+                    sx={{ py: 2 }}
+                  >
+                    View My Tickets
+                  </Button>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<FileDownload />}
+                    onClick={handleExportMyTickets}
+                    fullWidth
+                    sx={{ py: 2 }}
+                  >
+                    Export My Tickets
+                  </Button>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<TrendingUp />}
+                    onClick={() => navigate('/tickets')}
+                    fullWidth
+                    sx={{ py: 2 }}
+                  >
+                    All Tickets
+                  </Button>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+
         {/* Recent Assignments */}
         <Grid item xs={12}>
           <Card>
@@ -369,6 +474,17 @@ const TechnicianDashboard = ({ statistics, loading, error }) => {
           </Card>
         </Grid>
       </Grid>
+
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleNotificationClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleNotificationClose} severity={notification.severity} sx={{ width: '100%' }}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
